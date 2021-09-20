@@ -1,0 +1,25 @@
+
+from drone_control.patternModel.observerModel import Notifier, Observer
+from drone_control.sceneModel.dronesCollection import DronesCollection
+
+class DroneMovementNotifier(Notifier):
+
+    def __init__(self):
+        self.__observers = []
+
+    def attach(self, observer: Observer):
+        self.__observers.append(observer)
+
+    def detach(self, observer: Observer):
+        self.__observers.remove(observer)
+
+    def notifyAll(self, pose):
+        for obs in self.__observers:
+            obs.notify(pose)
+
+class DroneControlObserver(Observer):
+
+    def notify(self, pose):
+        activeDrone = DronesCollection().getActive()
+        if activeDrone is not None:
+            activeDrone.translate(pose)
