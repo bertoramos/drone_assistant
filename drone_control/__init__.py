@@ -56,7 +56,7 @@ def init_log():
 
 def register():
     init_log()
-
+    
     auto_load.register()
 
 def unregister():

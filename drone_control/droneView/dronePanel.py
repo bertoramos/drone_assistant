@@ -39,7 +39,7 @@ class DroneListPanel(bpy.types.Panel):
 
         row1 = layout.row()
         row1.template_list('LIST_UL_Drone', 'Drone list', scene, "drones_list", scene, "drone_list_index")
-
+        
         row2 = layout.row()
 
         drone_management_ops = [(droneController.droneCreator.CreateDroneOperator.bl_idname, "PLUS"),

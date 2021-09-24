@@ -7,6 +7,7 @@ from drone_control import sceneModel
 from .planEditor import PlanEditor
 from .planValidator import PlanValidatorOperator
 from . import mockDronePosSys
+from .positioningOperator import PositioningSystemModalOperator
 
 def register():
     bpy.types.Scene.plan_list = bpy.props.CollectionProperty(type = PlanListItem)
@@ -322,7 +323,8 @@ class DesactivePlanOperator(bpy.types.Operator):
         return not PlanEditor().isActive and \
                len(sceneModel.PlanCollection()) > 0 and \
                sceneModel.PlanCollection().getActive() is not None and \
-               not mockDronePosSys.MockDronePosSysModalOperator.isRunning
+               not mockDronePosSys.MockDronePosSysModalOperator.isRunning and \
+               not PositioningSystemModalOperator.isRunning
 
     def execute(self, context):
         plan_list = context.scene.plan_list

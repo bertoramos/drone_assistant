@@ -28,7 +28,8 @@ class MeshModel(ABC):
 
     def __del__(self):
         print("Deleted")
-        bpy.data.objects.remove(bpy.data.objects[self.__meshID], do_unlink=True)
+        if self.__meshID in bpy.data.objects:
+            bpy.data.objects.remove(bpy.data.objects[self.__meshID], do_unlink=True)
         if self.__colliderID is not None:
             bpy.data.objects.remove(bpy.data.objects[self.__colliderID], do_unlink=True)
         if self.__noteID is not None:

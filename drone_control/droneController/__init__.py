@@ -19,3 +19,7 @@ from .planCreator import ( CreatePlanEditorOperator,
                            DesactivePlanOperator)
 
 from .planValidator import PlanValidatorOperator
+
+from .positioningOperator import PositioningSystemModalOperator, TogglePositioningSystemOperator
+
+from .calibrationOperator import CalibrateOperator, DropAllStaticBeacons
