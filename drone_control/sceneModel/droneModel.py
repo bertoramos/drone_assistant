@@ -1,5 +1,6 @@
 
 import bpy
+from mathutils import Vector
 
 from .meshModel import MeshModel
 from .pose import Pose

@@ -109,11 +109,12 @@ class MarvelmindHandler(metaclass=Singleton):
         self.__thread = None
     
     def start(self, device, verbose):
-        self.__thread = MarvelmindThread(device=device, verbose=verbose)
-        self.__thread.start()
+        if self.__thread is None:
+            self.__thread = MarvelmindThread(device=device, verbose=verbose)
+            self.__thread.start()
     
     def stop(self):
-        if self.__thread is not None:
+        if self.__thread is not None and not self.__thread.stopped():
             self.__thread.stop()
             self.__thread.join()
             self.__thread = None
@@ -137,3 +138,6 @@ class MarvelmindHandler(metaclass=Singleton):
             return self.__thread.getStationaryBeacons()
         else:
             raise Exception("Thread is not started")
+    
+    def isRunning(self):
+        return self.__thread is not None

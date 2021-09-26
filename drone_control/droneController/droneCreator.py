@@ -9,7 +9,8 @@ import logging
 from drone_control import sceneModel
 from drone_control.utilsAlgorithm import draw_text
 from .planEditor import PlanEditor
-from . import mockDronePosSys
+from . import manualSimulationControl
+from drone_control import utilsAlgorithm
 
 def register():
     bpy.types.Scene.drones_list = bpy.props.CollectionProperty(type=DroneListItem)
@@ -167,7 +168,7 @@ class CreateDroneOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return not mockDronePosSys.MockDronePosSysModalOperator.isRunning
+        return True
 
     def execute(self, context):
         name = context.scene.drone_props.prop_drone_name
@@ -208,7 +209,7 @@ class RemoveDroneOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if mockDronePosSys.MockDronePosSysModalOperator.isRunning:
+        if manualSimulationControl.ManualSimulationModalOperator.isRunning:
             return False
 
         drones_list = context.scene.drones_list
@@ -235,7 +236,11 @@ class RemoveDroneOperator(bpy.types.Operator):
 
         len_drone_list = len(context.scene.drones_list) > 0
 
-        return len_drone_list and not isActive and not inAnyPlan and not editorActive
+        return len_drone_list and \
+               not isActive and \
+               not inAnyPlan and \
+               not editorActive and \
+               not utilsAlgorithm.MarvelmindHandler().isRunning()
 
     def execute(self, context):
         # Busca elemento
@@ -282,8 +287,9 @@ class SelectActiveDroneOperator(bpy.types.Operator):
     def poll(cls, context):
         return len(context.scene.drones_list) > 0 and \
                 context.scene.drone_list_index >= 0 and \
-                not mockDronePosSys.MockDronePosSysModalOperator.isRunning and \
-                sceneModel.PlanCollection().getActive() is None
+                not manualSimulationControl.ManualSimulationModalOperator.isRunning and \
+                sceneModel.PlanCollection().getActive() is None and \
+                not utilsAlgorithm.MarvelmindHandler().isRunning()
 
     def execute(self, context):
         drones_list = context.scene.drones_list
@@ -311,7 +317,7 @@ class UnselectActiveDroneOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if mockDronePosSys.MockDronePosSysModalOperator.isRunning:
+        if manualSimulationControl.ManualSimulationModalOperator.isRunning:
             return False
 
         drones_list = context.scene.drones_list
@@ -332,7 +338,10 @@ class UnselectActiveDroneOperator(bpy.types.Operator):
 
         noPlanActive = sceneModel.PlanCollection().getActive() is None
 
-        return noPlanActive and len(context.scene.drones_list) > 0 and isActiveSelected
+        return noPlanActive and \
+               len(context.scene.drones_list) > 0 and \
+               isActiveSelected and \
+               not utilsAlgorithm.MarvelmindHandler().isRunning()
 
     def execute(self, context):
         sceneModel.dronesCollection.DronesCollection().unsetActive()

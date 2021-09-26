@@ -99,18 +99,18 @@ class PlanModel:
         self.__plan.append(pose)
 
     def removePose(self, poseIndex: int):
-        if poseIndex in self.__plan:
+        if 0 <= poseIndex < len(self.__plan):
             del self.__plan[poseIndex]
 
     def getPose(self, poseIndex: int):
-        if poseIndex in self.__plan:
+        if 0 <= poseIndex < len(self.__plan):
             return self.__plan[poseIndex]
         return None
 
     def setPose(self, poseIndex: int, newPose: Pose):
-        if poseIndex in self.__plan:
+        if 0 <= poseIndex < len(self.__plan):
             self.__plan[poseIndex] = newPose
-
+    
     def draw(self):
         drone = DronesCollection().get(self.__droneID)
         drone_obj = bpy.data.objects[drone.meshID] if drone.meshID in bpy.data.objects else None

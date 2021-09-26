@@ -4,10 +4,8 @@ import bpy
 import drone_control.sceneModel
 
 from drone_control import droneController
-#import droneController.droneCreator.CreateDroneOperator as CreateDroneOperator
-#import droneController.droneCreator.RemoveDroneOperator as RemoveDroneOperator
-#import droneController.droneCreator.SelectActiveDroneOperator as SelectActiveDroneOperator
-#import droneController.droneCreator.UnselectActiveDroneOperator as UnselectActiveDroneOperator
+from drone_control.droneController import ManualSimulationModalOperator
+
 
 def register():
     pass
@@ -24,7 +22,7 @@ class DronePanel(bpy.types.Panel):
     bl_category = "Drone Panel"
 
     def draw(self, context):
-        self.layout.operator("scene.mock_possys_modal_operator")
+        self.layout.operator(ManualSimulationModalOperator.bl_idname)
 
 class DroneListPanel(bpy.types.Panel):
     bl_idname = "SCENE_PT_DroneListPanel"
@@ -46,7 +44,7 @@ class DroneListPanel(bpy.types.Panel):
                                 (droneController.droneCreator.RemoveDroneOperator.bl_idname, "X"),
                                 (droneController.droneCreator.SelectActiveDroneOperator.bl_idname, "RESTRICT_SELECT_OFF"),
                                 (droneController.droneCreator.UnselectActiveDroneOperator.bl_idname, "RESTRICT_SELECT_ON")]
-
+        
         for idname, icon in drone_management_ops:
             row2.operator(idname, icon=icon)
         row2.operator(droneController.droneCreator.LIST_OT_DroneMoveItem.bl_idname, text='', icon="TRIA_UP").direction = 'UP'

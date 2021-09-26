@@ -23,3 +23,5 @@ from .planValidator import PlanValidatorOperator
 from .positioningOperator import PositioningSystemModalOperator, TogglePositioningSystemOperator
 
 from .calibrationOperator import CalibrateOperator, DropAllStaticBeacons
+
+from .manualSimulationControl import ManualSimulationModalOperator

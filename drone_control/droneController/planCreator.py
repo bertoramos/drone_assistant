@@ -6,8 +6,8 @@ from drone_control import sceneModel
 
 from .planEditor import PlanEditor
 from .planValidator import PlanValidatorOperator
-from . import mockDronePosSys
-from .positioningOperator import PositioningSystemModalOperator
+from . import manualSimulationControl
+from drone_control import utilsAlgorithm
 
 def register():
     bpy.types.Scene.plan_list = bpy.props.CollectionProperty(type = PlanListItem)
@@ -82,7 +82,9 @@ class CreatePlanEditorOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return not PlanEditor().isActive and sceneModel.PlanCollection().getActive() is None and len(sceneModel.DronesCollection()) > 0
+        return not PlanEditor().isActive and \
+               sceneModel.PlanCollection().getActive() is None and \
+               len(sceneModel.DronesCollection()) > 0
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -125,7 +127,8 @@ class ModifyPlanEditorOperator(bpy.types.Operator):
     def poll(cls, context):
         return not PlanEditor().isActive and \
                sceneModel.PlanCollection().getActive() is None and \
-               len(sceneModel.PlanCollection()) > 0
+               len(sceneModel.PlanCollection()) > 0 and \
+               not utilsAlgorithm.MarvelmindHandler().isRunning()
 
     def execute(self, context):
         plan_list = context.scene.plan_list
@@ -160,7 +163,8 @@ class RemovePlanEditorOperator(bpy.types.Operator):
     def poll(cls, context):
         return not PlanEditor().isActive and \
                sceneModel.PlanCollection().getActive() is None and \
-               len(sceneModel.PlanCollection()) > 0
+               len(sceneModel.PlanCollection()) > 0 and \
+               not utilsAlgorithm.MarvelmindHandler().isRunning()
 
     def execute(self, context):
         plan_list = context.scene.plan_list
@@ -185,6 +189,8 @@ class RemovePlanEditorOperator(bpy.types.Operator):
 
         return {'FINISHED'}
 
+##############################################################################################
+# Editing panel operators
 
 class SavePlanEditorOperator(bpy.types.Operator):
     bl_idname = "wm.save_plan_editor"
@@ -281,7 +287,8 @@ class ActivePlanOperator(bpy.types.Operator):
         return not PlanEditor().isActive and \
                 len(sceneModel.PlanCollection()) > 0 and \
                 sceneModel.PlanCollection().getActive() is None and \
-                not mockDronePosSys.MockDronePosSysModalOperator.isRunning
+                not manualSimulationControl.ManualSimulationModalOperator.isRunning and \
+                not utilsAlgorithm.MarvelmindHandler().isRunning()
 
     def execute(self, context):
         plan_list = context.scene.plan_list
@@ -323,8 +330,8 @@ class DesactivePlanOperator(bpy.types.Operator):
         return not PlanEditor().isActive and \
                len(sceneModel.PlanCollection()) > 0 and \
                sceneModel.PlanCollection().getActive() is not None and \
-               not mockDronePosSys.MockDronePosSysModalOperator.isRunning and \
-               not PositioningSystemModalOperator.isRunning
+               not manualSimulationControl.ManualSimulationModalOperator.isRunning and \
+               not utilsAlgorithm.MarvelmindHandler().isRunning()
 
     def execute(self, context):
         plan_list = context.scene.plan_list

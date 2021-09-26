@@ -22,13 +22,19 @@ class PositioningSystemModalOperator(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         return sceneModel.dronesCollection.DronesCollection().getActive() is not None \
-                and not PositioningSystemModalOperator.isRunning
+               and not PositioningSystemModalOperator.isRunning
 
     def _observe_drone(self):
         self._notifier = droneControlObserver.DroneMovementNotifier()
         self._observer = droneControlObserver.DroneControlObserver()
 
         self._notifier.attach(self._observer)
+
+    def _des_observe_drone(self):
+        self._notifier.detach(self._observer)
+
+        del self._observer
+        del self._notifier
 
     def _begin_thread(self, dev):
         handler = MarvelmindHandler()
@@ -43,10 +49,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         handler.stop()
     
     def cancel(self, context):
-        self._notifier.detach(self._observer)
-
-        del self._observer
-        del self._notifier
+        self._des_observe_drone()
 
         self._end_thread()
 
@@ -57,9 +60,9 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         # beacon = PositioningSystemModalOperator._marvelmind_thread.getBeacon(addr)
         beacon = MarvelmindHandler().getBeacon(addr)
 
-        if beacon is not None and drone is not None:        
+        if beacon is not None:
             pose = sceneModel.Pose(beacon.x, beacon.y, beacon.z, 0, 0, 0)
-            drone.translate(pose)
+            self._notifier.notifyAll(pose)
 
     def modal(self, context, event):
         if event.type == "TIMER":
@@ -70,7 +73,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
             
             if PositioningSystemModalOperator.isRunning:
                 self._move_drone()
-
+            
         return {'PASS_THROUGH'}
 
     def execute(self, context):
@@ -111,7 +114,7 @@ class TogglePositioningSystemOperator(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         return not PlanEditor().isActive and \
-                   sceneModel.PlanCollection().getActive() is not None
+                  sceneModel.dronesCollection.DronesCollection().getActive() is not None
 
     def execute(self, context):
         if PositioningSystemModalOperator.isRunning:

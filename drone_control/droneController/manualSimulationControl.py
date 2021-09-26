@@ -4,6 +4,7 @@ from math import pi
 
 from drone_control import sceneModel
 from . import droneControlObserver
+from . import planExecutionControl
 
 
 def register():
@@ -12,10 +13,10 @@ def register():
 def unregister():
     pass
 
-class MockDronePosSysModalOperator(bpy.types.Operator):
+class ManualSimulationModalOperator(bpy.types.Operator):
     """Operator which runs its self from a timer"""
-    bl_idname = "scene.mock_possys_modal_operator"
-    bl_label = "Modal Mock Positioning System"
+    bl_idname = "scene.manual_simulation_modal_operator"
+    bl_label = "Manual Simulation System"
 
     _timer = None
     _observer = None
@@ -26,14 +27,25 @@ class MockDronePosSysModalOperator(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         return sceneModel.dronesCollection.DronesCollection().getActive() is not None \
-                and not MockDronePosSysModalOperator.isRunning
+                and not ManualSimulationModalOperator.isRunning
 
     def _observe_drone(self):
         self._notifier = droneControlObserver.DroneMovementNotifier()
         self._observer = droneControlObserver.DroneControlObserver()
+        self._planExecutionObserver = planExecutionControl.PlanControllerObserver()
+        self._planExecutionObserver.start()
 
         self._notifier.attach(self._observer)
+        self._notifier.attach(self._planExecutionObserver)
+    
+    def _des_observe_drone(self):
+        self._notifier.detach(self._observer)
+        self._notifier.detach(self._planExecutionObserver)
 
+        del self._observer
+        del self._planExecutionObserver
+        del self._notifier
+    
     def _apply_move(self, keyname):
         speed = 0.1 # desplazamiento
         # tecla : ('eje')
@@ -56,7 +68,7 @@ class MockDronePosSysModalOperator(bpy.types.Operator):
         last_val = getattr(current_pose.location, axis)
         setattr(current_pose.location, axis, last_val+(direction*speed))
 
-        drone.translate(current_pose)
+        self._notifier.notifyAll(current_pose)
 
         return {'RUNNING_MODAL'}
 
@@ -82,12 +94,12 @@ class MockDronePosSysModalOperator(bpy.types.Operator):
         last_val = current_pose.rotation
 
         last_val.rotate_axis(axis, direction*angle_speed)
-
+        
         current_pose.rotation.x = last_val.x
         current_pose.rotation.y = last_val.y
         current_pose.rotation.z = last_val.z
 
-        drone.translate(current_pose)
+        self._notifier.notifyAll(current_pose)
 
         return {'RUNNING_MODAL'}
 
@@ -111,14 +123,11 @@ class MockDronePosSysModalOperator(bpy.types.Operator):
         self._observe_drone()
         wm = context.window_manager
         wm.modal_handler_add(self)
-        MockDronePosSysModalOperator.isRunning = True
+        ManualSimulationModalOperator.isRunning = True
 
         return {'RUNNING_MODAL'}
 
     def cancel(self, context):
-        self._notifier.detach(self._observer)
+        self._des_observe_drone()
 
-        del self._observer
-        del self._notifier
-
-        MockDronePosSysModalOperator.isRunning = False
+        ManualSimulationModalOperator.isRunning = False
