@@ -1,5 +1,6 @@
 
 import bpy
+
 from drone_control.patternModel.observerModel import Notifier, Observer
 from drone_control.sceneModel import DronesCollection, PlanCollection, DroneModel
 
@@ -33,6 +34,9 @@ class PlanControllerObserver(Observer):
     def stop(self):
         self.__stopped = True
         print("STOP PLAN EXECUTION")
+    
+    def stopped(self):
+        return self.__stopped
     
     def notify(self, pose):
         print("notify")

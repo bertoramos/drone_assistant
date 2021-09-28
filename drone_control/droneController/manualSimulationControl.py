@@ -5,6 +5,7 @@ from math import pi
 from drone_control import sceneModel
 from . import droneControlObserver
 from . import planExecutionControl
+from .droneMovementHandler import DroneMovementHandler
 
 
 def register():
@@ -19,8 +20,6 @@ class ManualSimulationModalOperator(bpy.types.Operator):
     bl_label = "Manual Simulation System"
 
     _timer = None
-    _observer = None
-    _notifier = None
 
     isRunning = False
 
@@ -30,21 +29,13 @@ class ManualSimulationModalOperator(bpy.types.Operator):
                 and not ManualSimulationModalOperator.isRunning
 
     def _observe_drone(self):
-        self._notifier = droneControlObserver.DroneMovementNotifier()
-        self._observer = droneControlObserver.DroneControlObserver()
-        self._planExecutionObserver = planExecutionControl.PlanControllerObserver()
-        self._planExecutionObserver.start()
-
-        self._notifier.attach(self._observer)
-        self._notifier.attach(self._planExecutionObserver)
+        DroneMovementHandler().init()
+        DroneMovementHandler().start_positioning()
     
     def _des_observe_drone(self):
-        self._notifier.detach(self._observer)
-        self._notifier.detach(self._planExecutionObserver)
-
-        del self._observer
-        del self._planExecutionObserver
-        del self._notifier
+        DroneMovementHandler().stop_plan()
+        DroneMovementHandler().stop_positioning()
+        DroneMovementHandler().finish()
     
     def _apply_move(self, keyname):
         speed = 0.1 # desplazamiento
@@ -68,8 +59,8 @@ class ManualSimulationModalOperator(bpy.types.Operator):
         last_val = getattr(current_pose.location, axis)
         setattr(current_pose.location, axis, last_val+(direction*speed))
 
-        self._notifier.notifyAll(current_pose)
-
+        #self._notifier.notifyAll(current_pose)
+        DroneMovementHandler().notifyAll(current_pose)
         return {'RUNNING_MODAL'}
 
     def _apply_rotation(self, keyname):
@@ -99,11 +90,11 @@ class ManualSimulationModalOperator(bpy.types.Operator):
         current_pose.rotation.y = last_val.y
         current_pose.rotation.z = last_val.z
 
-        self._notifier.notifyAll(current_pose)
+        # self._notifier.notifyAll(current_pose)
+        DroneMovementHandler().notifyAll(current_pose)
 
         return {'RUNNING_MODAL'}
-
-
+    
     def modal(self, context, event):
         if event.type in {'ESC'}:
             self.cancel(context)
@@ -114,7 +105,7 @@ class ManualSimulationModalOperator(bpy.types.Operator):
                 return rescode
             if ( rescode := self._apply_rotation(event.type) ) is not None:
                 return rescode
-
+        
         return {'PASS_THROUGH'}
 
     def execute(self, context):

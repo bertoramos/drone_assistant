@@ -10,6 +10,8 @@ import logging
 class Beacon:
     address: int
 
+    timestamp: float
+
     x: float
     y: float
     z: float
@@ -53,6 +55,7 @@ class MarvelmindThread(StoppableThread):
         txt = "Get mobile beacon data : "
         for address, xyz in mobile_pos.items():
             current_beacon = Beacon(address,
+                                    xyz[3],
                                     xyz[0], xyz[1], xyz[2],
                                     False)
             
@@ -64,6 +67,7 @@ class MarvelmindThread(StoppableThread):
         txt = "Get stationary beacon data : "
         for address, xyz in stationary_pos.items():
             current_beacon = Beacon(address,
+                                    0,
                                     xyz[0], xyz[1], xyz[2],
                                     True)
             

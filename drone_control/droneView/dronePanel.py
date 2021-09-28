@@ -4,7 +4,6 @@ import bpy
 import drone_control.sceneModel
 
 from drone_control import droneController
-from drone_control.droneController import ManualSimulationModalOperator
 
 
 def register():
@@ -12,17 +11,6 @@ def register():
 
 def unregister():
     pass
-
-
-class DronePanel(bpy.types.Panel):
-    bl_idname = "SCENE_PT_DronePanel"
-    bl_label = "Drone Panel"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "Drone Panel"
-
-    def draw(self, context):
-        self.layout.operator(ManualSimulationModalOperator.bl_idname)
 
 class DroneListPanel(bpy.types.Panel):
     bl_idname = "SCENE_PT_DroneListPanel"

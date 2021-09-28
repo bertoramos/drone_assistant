@@ -1,15 +1,19 @@
 
+from typing import DefaultDict
 import bpy
 from bpy.types import AddonPreferences
 from bpy.props import StringProperty
 
 import sys
 
-def update_port(self, context):
-    pass
+DEFAULT_PORT = "COM4" if sys.platform=="win32" else "/dev/ttyACM0"
 
-def get_port(self):
-    return self["prop_marvelmind_port"]
+def register():
+    global DEFAULT_PORT
+    DEFAULT_PORT = "COM4" if sys.platform=="win32" else "/dev/ttyACM0"
+
+def unregister():
+    pass
 
 def set_port(self, value):
     import re
@@ -29,10 +33,8 @@ class DroneControlPreferences(AddonPreferences):
     
     prop_marvelmind_port: StringProperty(
         name="Marvelmind port",
-        update=update_port,
-        get=get_port,
         set=set_port,
-        default="COM4" if sys.platform=="win32" else "/dev/ttyACM0"
+        default=DEFAULT_PORT
     )
 
     def draw(self, context):

@@ -25,3 +25,6 @@ from .positioningOperator import PositioningSystemModalOperator, TogglePositioni
 from .calibrationOperator import CalibrateOperator, DropAllStaticBeacons
 
 from .manualSimulationControl import ManualSimulationModalOperator
+
+from .planExecutionOperator import TogglePlanOperator
+from .droneMovementHandler import DroneMovementHandler

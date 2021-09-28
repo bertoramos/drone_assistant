@@ -4,6 +4,7 @@ from drone_control import sceneModel
 from .planEditor import PlanEditor
 from . import droneControlObserver
 from drone_control.utilsAlgorithm import MarvelmindHandler
+from .droneMovementHandler import DroneMovementHandler
 import logging
 
 class PositioningSystemModalOperator(bpy.types.Operator):
@@ -25,16 +26,12 @@ class PositioningSystemModalOperator(bpy.types.Operator):
                and not PositioningSystemModalOperator.isRunning
 
     def _observe_drone(self):
-        self._notifier = droneControlObserver.DroneMovementNotifier()
-        self._observer = droneControlObserver.DroneControlObserver()
-
-        self._notifier.attach(self._observer)
+        DroneMovementHandler().init()
+        DroneMovementHandler().start_positioning()
 
     def _des_observe_drone(self):
-        self._notifier.detach(self._observer)
-
-        del self._observer
-        del self._notifier
+        DroneMovementHandler().stop_positioning()
+        DroneMovementHandler().finish()
 
     def _begin_thread(self, dev):
         handler = MarvelmindHandler()
@@ -62,8 +59,9 @@ class PositioningSystemModalOperator(bpy.types.Operator):
 
         if beacon is not None:
             pose = sceneModel.Pose(beacon.x, beacon.y, beacon.z, 0, 0, 0)
-            self._notifier.notifyAll(pose)
-
+            # self._notifier.notifyAll(pose)
+            DroneMovementHandler().notifyAll(pose)
+    
     def modal(self, context, event):
         if event.type == "TIMER":
             
@@ -81,7 +79,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         # Genera Notifier y observer
         preferences = context.preferences
         addon_prefs = preferences.addons[__name__.split(".")[0]].preferences
-        dev = addon_prefs.prop_marvelmind_port
+        dev = context.scene.prop_marvelmind_port
 
         self._begin_thread(dev)
         self._observe_drone()
@@ -122,7 +120,7 @@ class TogglePositioningSystemOperator(bpy.types.Operator):
         else:
             preferences = context.preferences
             addon_prefs = preferences.addons[__name__.split(".")[0]].preferences
-            dev = addon_prefs.prop_marvelmind_port
+            dev = context.scene.prop_marvelmind_port
             
             isValid = self._check_serial(dev)
             if isValid:
