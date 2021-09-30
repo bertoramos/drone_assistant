@@ -85,7 +85,6 @@ def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_nu
 
     return cursor_name
 
-
 class PlanModel:
 
     def __init__(self, planID, droneID):
@@ -94,6 +93,9 @@ class PlanModel:
         self.__plan = []
 
         self.__plan_meshes = []
+
+        self.__original_color = dict({})
+        self.__highlight_color = (0., 1., 0., 1.)
 
     def addPose(self, pose: Pose):
         self.__plan.append(pose)
@@ -110,6 +112,16 @@ class PlanModel:
     def setPose(self, poseIndex: int, newPose: Pose):
         if 0 <= poseIndex < len(self.__plan):
             self.__plan[poseIndex] = newPose
+    
+    def highlight(self, poseIndex: int):
+        self.no_highlight()
+        obj = bpy.data.objects[self.__plan_meshes[poseIndex]]
+        self.__change_color(obj)
+    
+    def no_highlight(self):
+        for obj_name in self.__plan_meshes:
+            obj = bpy.data.objects[obj_name]
+            self.__set_original_color(obj)
     
     def draw(self):
         drone = DronesCollection().get(self.__droneID)
@@ -143,3 +155,22 @@ class PlanModel:
 
     planID = property(fget=__get_planID)
     droneID = property(fget=__get_droneID)
+
+    ### VIEW
+
+    def __change_color(self, obj):
+        mat = obj.active_material
+        if mat is None:
+            mat = bpy.data.materials.new(obj.name_full + "_mat")
+            obj.active_material = mat
+        if obj.name_full not in self.__original_color:
+            self.__original_color[obj.name_full] = mat.diffuse_color[:]
+        mat.diffuse_color = self.__highlight_color
+    
+    def __set_original_color(self, obj):
+        mat = obj.active_material
+        if mat is None:
+            return
+        if obj.name_full not in self.__original_color:
+            return
+        mat.diffuse_color = self.__original_color[obj.name_full]

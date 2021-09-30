@@ -23,7 +23,7 @@ class PlanValidatorOperator(bpy.types.Operator):
     _changes_obj_dict = dict({})
 
     _cursor_colliding = dict({})
-
+    
     _original_color = dict({})
     _alert_color = (1., 0., 0., 1.)
 

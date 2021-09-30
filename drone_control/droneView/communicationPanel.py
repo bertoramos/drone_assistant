@@ -8,7 +8,6 @@ from drone_control.droneController import (
                     TogglePlanOperator,
                     DroneMovementHandler,
                     ManualSimulationModalOperator
-                    
 )
 
 class CommunicationPanel(bpy.types.Panel):

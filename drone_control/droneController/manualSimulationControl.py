@@ -7,7 +7,6 @@ from . import droneControlObserver
 from . import planExecutionControl
 from .droneMovementHandler import DroneMovementHandler
 
-
 def register():
     pass
 
@@ -48,7 +47,7 @@ class ManualSimulationModalOperator(bpy.types.Operator):
                   'E': ('z', +1),
                   'C': ('z', -1)
                   }
-
+        
         if keyname not in action: return None
 
         drone = sceneModel.dronesCollection.DronesCollection().getActive()
@@ -106,6 +105,9 @@ class ManualSimulationModalOperator(bpy.types.Operator):
             if ( rescode := self._apply_rotation(event.type) ) is not None:
                 return rescode
         
+        if event.type == "TIMER":
+            DroneMovementHandler().autostop()
+        
         return {'PASS_THROUGH'}
 
     def execute(self, context):
@@ -113,6 +115,7 @@ class ManualSimulationModalOperator(bpy.types.Operator):
         # Genera Notifier y observer
         self._observe_drone()
         wm = context.window_manager
+        self._timer = wm.event_timer_add(0.1, window=context.window)
         wm.modal_handler_add(self)
         ManualSimulationModalOperator.isRunning = True
 

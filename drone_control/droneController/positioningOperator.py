@@ -2,7 +2,6 @@
 import bpy
 from drone_control import sceneModel
 from .planEditor import PlanEditor
-from . import droneControlObserver
 from drone_control.utilsAlgorithm import MarvelmindHandler
 from .droneMovementHandler import DroneMovementHandler
 import logging
@@ -69,6 +68,8 @@ class PositioningSystemModalOperator(bpy.types.Operator):
                 self.cancel(context)
                 return {'FINISHED'}
             
+            DroneMovementHandler().autostop()
+            
             if PositioningSystemModalOperator.isRunning:
                 self._move_drone()
             
@@ -79,7 +80,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         # Genera Notifier y observer
         preferences = context.preferences
         addon_prefs = preferences.addons[__name__.split(".")[0]].preferences
-        dev = context.scene.prop_marvelmind_port
+        dev = addon_prefs.prop_marvelmind_port
 
         self._begin_thread(dev)
         self._observe_drone()
@@ -120,7 +121,7 @@ class TogglePositioningSystemOperator(bpy.types.Operator):
         else:
             preferences = context.preferences
             addon_prefs = preferences.addons[__name__.split(".")[0]].preferences
-            dev = context.scene.prop_marvelmind_port
+            dev = addon_prefs.prop_marvelmind_port
             
             isValid = self._check_serial(dev)
             if isValid:

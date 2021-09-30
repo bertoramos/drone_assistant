@@ -61,6 +61,11 @@ class DroneMovementHandler(metaclass=Singleton):
             self._plan_control_observer.stop()
             self._notifier.detach(self._plan_control_observer)
             self._plan_control_observer = None
+    
+    def autostop(self):
+        if self._plan_control_observer is not None:
+            if self._plan_control_observer.stopped():
+                self.stop_plan()
 
     def isPositioningRunning(self):
         return self._positioning_observer is not None

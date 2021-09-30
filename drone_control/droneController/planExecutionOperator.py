@@ -2,7 +2,7 @@
 import bpy
 
 from .droneMovementHandler import DroneMovementHandler
-from drone_control.sceneModel import PlanCollection
+from drone_control.sceneModel import PlanCollection, DronesCollection
 
 class TogglePlanOperator(bpy.types.Operator):
     bl_idname = "scene.toggleplan"
