@@ -12,32 +12,35 @@ def register():
     global DEFAULT_PORT
     DEFAULT_PORT = "COM4" if sys.platform=="win32" else "/dev/ttyACM0"
 
+    bpy.types.Scene.prop_marvelmind_port = StringProperty(
+        name="Marvelmind port",
+        #set=set_port,
+        default=DEFAULT_PORT
+    )
+
 def unregister():
-    pass
+    del bpy.types.Scene.prop_marvelmind_port
 
 def set_port(self, value):
     import re
     port = value
 
     osname = sys.platform
-    ospatt = re.compile("COM\d+") if osname == "win32" else re.compile("/dev/tty\w+")
+    ospatt = re.compile("COM\d+") if osname == "win32" else re.compile("/dev/ttyACM\d+")
     
+    print(osname, port, value, ospatt.match(port), ospatt)
+    print(self.keys())
     if ospatt.match(port) is None:
         port = "COM4" if osname == "win32" else "/dev/ttyACM0"
-    
-    self['prop_marvelmind_port'] = port
+        self['prop_marvelmind_port'] = port
+        return
+    self['prop_marvelmind_port'] = value
 
 
 class DroneControlPreferences(AddonPreferences):
     bl_idname = __package__
-    
-    prop_marvelmind_port: StringProperty(
-        name="Marvelmind port",
-        set=set_port,
-        default=DEFAULT_PORT
-    )
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(self, "prop_marvelmind_port")
+        layout.prop(context.scene, "prop_marvelmind_port")
 

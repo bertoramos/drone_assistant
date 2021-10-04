@@ -2,7 +2,7 @@
 import threading
 import marvelmind_pylib as mpl
 from dataclasses import dataclass
-from drone_control.patternModel import Singleton
+from drone_control.patternModel import Singleton, StoppableThread
 
 import logging
 
@@ -18,21 +18,8 @@ class Beacon:
 
     is_stationary: bool
 
-class StoppableThread(threading.Thread):
-
-    def __init__(self, *args, **kwargs):
-        super(StoppableThread, self).__init__(*args, **kwargs)
-        self._stopper = threading.Event()
-    
-    def stop(self):
-        self._stopper.set()
-    
-    def stopped(self):
-        return self._stopper.isSet()
-
-
 class MarvelmindThread(StoppableThread):
-
+    
     def __init__(self, *args, **kwargs):
         self.__tty_dev = kwargs['device']
         self.__verbose = kwargs['verbose']

@@ -1,10 +1,14 @@
 
 import bpy
+from mathutils import Euler
+import logging
+
+from drone_control.communication import Buffer, ConnectionHandler
 from drone_control import sceneModel
 from .planEditor import PlanEditor
 from drone_control.utilsAlgorithm import MarvelmindHandler
 from .droneMovementHandler import DroneMovementHandler
-import logging
+
 
 class PositioningSystemModalOperator(bpy.types.Operator):
     bl_idname = "wm.positioning_system_modal"
@@ -32,9 +36,11 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         DroneMovementHandler().stop_positioning()
         DroneMovementHandler().finish()
 
-    def _begin_thread(self, dev):
+    def _begin_thread(self, dev, clientAddr, serverAddr):
         handler = MarvelmindHandler()
         handler.start(device=dev, verbose=True)
+        ConnectionHandler().initialize(clientAddr, serverAddr)
+        ConnectionHandler().start()
         # PositioningSystemModalOperator._marvelmind_thread = MarvelmindThread(device=dev, verbose=True)
         # PositioningSystemModalOperator._marvelmind_thread.start()
     
@@ -43,6 +49,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         # PositioningSystemModalOperator._marvelmind_thread.join()
         handler = MarvelmindHandler()
         handler.stop()
+        ConnectionHandler().stop()
     
     def cancel(self, context):
         self._des_observe_drone()
@@ -56,10 +63,29 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         # beacon = PositioningSystemModalOperator._marvelmind_thread.getBeacon(addr)
         beacon = MarvelmindHandler().getBeacon(addr)
 
+        x = drone.pose.location.x
+        y = drone.pose.location.y
+        z = drone.pose.location.z
+        rx = drone.pose.rotation.x
+        ry = drone.pose.rotation.y
+        rz = drone.pose.rotation.z
+
+
         if beacon is not None:
-            pose = sceneModel.Pose(beacon.x, beacon.y, beacon.z, 0, 0, 0)
-            # self._notifier.notifyAll(pose)
-            DroneMovementHandler().notifyAll(pose)
+            x, y, z = beacon.x, beacon.y, beacon.z
+        last_trace = Buffer().get_last_trace()
+        if last_trace is not None:
+            yaw, pitch, roll = last_trace.yaw, last_trace.pitch, last_trace.roll
+            init_rotation = Euler((0,0,0))
+            init_rotation.rotate_axis('Z', yaw)
+            init_rotation.rotate_axis('X', pitch)
+            init_rotation.rotate_axis('Y', roll)
+            #print(init_rotation)
+
+            rx, ry, rz = init_rotation.x, init_rotation.y, init_rotation.z
+
+        pose = sceneModel.Pose(x, y, z, rx, ry, rz)
+        DroneMovementHandler().notifyAll(pose)
     
     def modal(self, context, event):
         if event.type == "TIMER":
@@ -80,9 +106,13 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         # Genera Notifier y observer
         preferences = context.preferences
         addon_prefs = preferences.addons[__name__.split(".")[0]].preferences
-        dev = addon_prefs.prop_marvelmind_port
+        dev = context.scene.prop_marvelmind_port
+        #dev = addon_prefs.prop_marvelmind_port
+        
+        udp_clientAddr = ("192.168.0.24", 5558)
+        udp_serverAddr = ("192.168.0.16", 4445)
 
-        self._begin_thread(dev)
+        self._begin_thread(dev, udp_clientAddr, udp_serverAddr)
         self._observe_drone()
 
         wm = context.window_manager
@@ -121,7 +151,8 @@ class TogglePositioningSystemOperator(bpy.types.Operator):
         else:
             preferences = context.preferences
             addon_prefs = preferences.addons[__name__.split(".")[0]].preferences
-            dev = addon_prefs.prop_marvelmind_port
+            # dev = addon_prefs.prop_marvelmind_port
+            dev = context.scene.prop_marvelmind_port
             
             isValid = self._check_serial(dev)
             if isValid:
