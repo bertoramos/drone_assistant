@@ -9,6 +9,8 @@ from .planEditor import PlanEditor
 from drone_control.utilsAlgorithm import MarvelmindHandler
 from .droneMovementHandler import DroneMovementHandler
 
+from drone_control.communication import datapacket
+
 
 class PositioningSystemModalOperator(bpy.types.Operator):
     bl_idname = "wm.positioning_system_modal"
@@ -41,6 +43,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         handler.start(device=dev, verbose=True)
         ConnectionHandler().initialize(clientAddr, serverAddr)
         ConnectionHandler().start()
+        
         # PositioningSystemModalOperator._marvelmind_thread = MarvelmindThread(device=dev, verbose=True)
         # PositioningSystemModalOperator._marvelmind_thread.start()
     

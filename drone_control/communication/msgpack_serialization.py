@@ -39,7 +39,6 @@ class TracePacketMsgPackSerialization(st.Serialization):
         assert type(packet) == datapacket.TracePacket, "Error : packet is not a TracePacket"
         l = list(iter(packet))
 
-        from math import degrees
         return list(iter(packet))
 
     @staticmethod
@@ -52,12 +51,30 @@ class TracePacketMsgPackSerialization(st.Serialization):
 
         return datapacket.TracePacket(list_packet[0], list_packet[2], list_packet[3], list_packet[4])
 
+class ModePacketMsgPackSerialization(st.Serialization):
+
+    @staticmethod
+    def pack(packet):
+        assert type(packet) == datapacket.ModePacket, "Error : packet is not a ModePacket"
+        l = list(iter(packet))
+
+        return list(iter(packet))
+    
+    @staticmethod
+    def unpack(list_packet):
+        assert len(list_packet) == 3, "Error: No valid mode packet"
+        assert list_packet[1] == 3, "Error: list_packet is not a mode packet"
+
+        return datapacket.ModePacket(list_packet[0], list_packet[2])
+
+
 # { ptype : SerializationClass, ... }
 # choose_serialization.get(ptype) -> return: ptype pack/unpack method
 choose_serialization = {
                         1: AckPacketMsgPackSerialization,
-                        2: TracePacketMsgPackSerialization
-                       }
+                        2: TracePacketMsgPackSerialization,
+                        3: ModePacketMsgPackSerialization
+                        }
 
 class MsgPackSerializator(st.Serializator):
 

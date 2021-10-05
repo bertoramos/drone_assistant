@@ -15,8 +15,8 @@ class Buffer(metaclass=Singleton):
         super().__init__()
         self.__buffer = []
         self.__last_trace = None
-        self.last_rcv_pid = -1
-        self.last_snt_pid = -1
+        self.last_rcv_pid = 0
+        self.last_snt_pid = 0
     
     def set_packet(self, packet):
         if packet.pid > self.last_rcv_pid:
@@ -29,8 +29,8 @@ class Buffer(metaclass=Singleton):
     def clear(self):
         self.__buffer.clear()
         self.__last_trace = None
-        self.last_rcv_pid = -1
-        self.last_snt_pid = -1
+        self.last_rcv_pid = 0
+        self.last_snt_pid = 0
     
     def get_last_trace(self):
         return self.__last_trace
@@ -65,6 +65,9 @@ class UDPServer(StoppableThread):
     def send(self, packet):
         self.__client_socket.sendto(ms.MsgPackSerializator.pack(packet), self.__serverAddr)
     
+    def receive_ack(max_timeout):
+        return True
+
     def __receive(self):
         msgFromServer, addr = self.__client_socket.recvfrom(buffersize)
         packet = ms.MsgPackSerializator.unpack(msgFromServer)
@@ -86,13 +89,46 @@ class UDPServer(StoppableThread):
             print(e)
             return
         
+        try:
+            Buffer().last_snt_pid += 1
+            pid = Buffer().last_snt_pid
+            packet_mode = dp.ModePacket(pid, 1)
+            self.send(packet_mode)
+
+            if not self.receive_ack(5):
+                print("Server not available")
+                return
+        except Exception as e:
+            print(e)
+            return
+        
+        MAX_TIMEOUT = 5
+        no_recv_num = MAX_TIMEOUT
         while True:
             if self.stopped():
                 break
             try:
                 self.__receive()
+                no_recv_num = MAX_TIMEOUT
             except Exception as e:
-                print(e)
+                from drone_control.droneController import PositioningSystemModalOperator
+                print(e, type(e))
+                if type(e) == socket.timeout:
+                    no_recv_num -=1
+                    if no_recv_num == 0:
+                        PositioningSystemModalOperator.isRunning = False
+                        break
+        try:
+            Buffer().last_snt_pid += 1
+            pid = Buffer().last_snt_pid
+            packet_mode = dp.ModePacket(pid, 0)
+            self.send(packet_mode)
+
+            if not self.receive_ack(5):
+                print("Client disconnected but not server")
+        except Exception as e:
+            pass
+
         try:
             self.__close_socket()
         except Exception as e:

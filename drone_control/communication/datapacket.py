@@ -42,4 +42,17 @@ class TracePacket(Packet):
     yaw = property(__getYaw)
     pitch = property(__getPitch)
     roll = property(__getRoll)
+
+class ModePacket(Packet):
+
+    def __init__(self, pid, mode, ptype=3) -> None:
+        super().__init__(pid, ptype)
+        self.__mode = mode
     
+    def __iter__(self):
+        return iter([self.pid, self.ptype, self.__mode])
+    
+    def __getMode(self):
+        return self.__mode
+
+    mode = property(__getMode)
