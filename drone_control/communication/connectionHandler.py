@@ -34,6 +34,19 @@ class Buffer(metaclass=Singleton):
     
     def get_last_trace(self):
         return self.__last_trace
+    
+    def get_ack_packet(self, pid):
+        ret_packet = None
+        for packet in self.__buffer:
+            if type(packet) == dp.AckPacket and packet.ackPid == pid:
+                ret_packet = packet
+                break
+        if ret_packet is not None:
+            self.__buffer.remove(ret_packet)
+        return ret_packet
+    
+    def __iter__(self):
+        return iter(self.__buffer)
 
 buffersize = 4096
 
@@ -50,6 +63,12 @@ class UDPServer(StoppableThread):
         super(UDPServer, self).__init__(*args, **kwargs)
 
         self.__client_socket = None
+
+        try:
+            self.__open_socket()
+        except Exception as e:
+            print(e)
+            return
     
     def __open_socket(self):
         self.__client_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
@@ -62,16 +81,18 @@ class UDPServer(StoppableThread):
             self.__client_socket = None
             Buffer().clear()
     
-    def send(self, packet):
-        self.__client_socket.sendto(ms.MsgPackSerializator.pack(packet), self.__serverAddr)
+    def __del__(self):
+        self.__close_socket()
     
-    def receive_ack(max_timeout):
-        return True
-
+    def send(self, packet):
+        if self.__client_socket is not None:
+            self.__client_socket.sendto(ms.MsgPackSerializator.pack(packet), self.__serverAddr)
+    
     def __receive(self):
         msgFromServer, addr = self.__client_socket.recvfrom(buffersize)
         packet = ms.MsgPackSerializator.unpack(msgFromServer)
-        
+        if packet is not None and type(packet) != dp.TracePacket:
+            print("Received : ", list(iter(packet)))
         Buffer().set_packet(packet)
 
         if type(packet) in UDPServer.ack_packets:
@@ -83,24 +104,8 @@ class UDPServer(StoppableThread):
             self.send(ackpacket)
         
     def run(self):
-        try:
-            self.__open_socket()
-        except Exception as e:
-            print(e)
-            return
-        
-        try:
-            Buffer().last_snt_pid += 1
-            pid = Buffer().last_snt_pid
-            packet_mode = dp.ModePacket(pid, 1)
-            self.send(packet_mode)
 
-            if not self.receive_ack(5):
-                print("Server not available")
-                return
-        except Exception as e:
-            print(e)
-            return
+        from drone_control.droneController import PositioningSystemModalOperator
         
         MAX_TIMEOUT = 5
         no_recv_num = MAX_TIMEOUT
@@ -111,24 +116,14 @@ class UDPServer(StoppableThread):
                 self.__receive()
                 no_recv_num = MAX_TIMEOUT
             except Exception as e:
-                from drone_control.droneController import PositioningSystemModalOperator
                 print(e, type(e))
                 if type(e) == socket.timeout:
                     no_recv_num -=1
                     if no_recv_num == 0:
-                        PositioningSystemModalOperator.isRunning = False
                         break
-        try:
-            Buffer().last_snt_pid += 1
-            pid = Buffer().last_snt_pid
-            packet_mode = dp.ModePacket(pid, 0)
-            self.send(packet_mode)
-
-            if not self.receive_ack(5):
-                print("Client disconnected but not server")
-        except Exception as e:
-            pass
-
+        
+        PositioningSystemModalOperator.isRunning = False
+        
         try:
             self.__close_socket()
         except Exception as e:
@@ -161,3 +156,18 @@ class ConnectionHandler(metaclass=Singleton):
     def send(self, packet):
         if self.__thread is not None and not self.__thread.stopped():
             self.__thread.send(packet)
+    
+    def receive_ack_packet(self, pid):
+        start_time = time.time()
+        ack_packet = None
+        while abs(time.time() - start_time) < 8.0 and ack_packet is None:
+            ack_packet = Buffer().get_ack_packet(pid)
+        return ack_packet
+    
+    def send_change_mode(self, mode):
+        Buffer().last_snt_pid += 1
+        PID = Buffer().last_snt_pid
+        mode_packet = dp.ModePacket(PID, mode)
+        self.send(mode_packet)
+        print("Sent : ", list(iter(mode_packet)))
+        return self.receive_ack_packet(PID)

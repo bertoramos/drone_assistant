@@ -21,6 +21,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
     _timer = None
     _observer = None
     _notifier = None
+    error_message = ""
 
     def check(self, context):
         return True
@@ -33,16 +34,25 @@ class PositioningSystemModalOperator(bpy.types.Operator):
     def _observe_drone(self):
         DroneMovementHandler().init()
         DroneMovementHandler().start_positioning()
-
+    
     def _des_observe_drone(self):
         DroneMovementHandler().stop_positioning()
         DroneMovementHandler().finish()
-
+    
     def _begin_thread(self, dev, clientAddr, serverAddr):
         handler = MarvelmindHandler()
         handler.start(device=dev, verbose=True)
         ConnectionHandler().initialize(clientAddr, serverAddr)
         ConnectionHandler().start()
+
+        if not ConnectionHandler().send_change_mode(1):
+            print("Change mode not finished: Server not available")
+            self.report({'INFO'}, 'Server not available')
+            ConnectionHandler().stop()
+            return False
+        else:
+            print("Mode changed to 1")
+            return True
         
         # PositioningSystemModalOperator._marvelmind_thread = MarvelmindThread(device=dev, verbose=True)
         # PositioningSystemModalOperator._marvelmind_thread.start()
@@ -50,6 +60,11 @@ class PositioningSystemModalOperator(bpy.types.Operator):
     def _end_thread(self):
         # PositioningSystemModalOperator._marvelmind_thread.stop()
         # PositioningSystemModalOperator._marvelmind_thread.join()
+        if not ConnectionHandler().send_change_mode(0):
+            print("Change mode not finished")
+        else:
+            print("Mode changed to 0")
+        
         handler = MarvelmindHandler()
         handler.stop()
         ConnectionHandler().stop()
@@ -73,10 +88,11 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         ry = drone.pose.rotation.y
         rz = drone.pose.rotation.z
 
-
+        last_trace = Buffer().get_last_trace()
+        
         if beacon is not None:
             x, y, z = beacon.x, beacon.y, beacon.z
-        last_trace = Buffer().get_last_trace()
+        
         if last_trace is not None:
             yaw, pitch, roll = last_trace.yaw, last_trace.pitch, last_trace.roll
             init_rotation = Euler((0,0,0))
@@ -107,22 +123,31 @@ class PositioningSystemModalOperator(bpy.types.Operator):
     def execute(self, context):
         # Genera drone
         # Genera Notifier y observer
+        PositioningSystemModalOperator.isRunning = True
+
         preferences = context.preferences
         addon_prefs = preferences.addons[__name__.split(".")[0]].preferences
         dev = context.scene.prop_marvelmind_port
         #dev = addon_prefs.prop_marvelmind_port
-        
-        udp_clientAddr = ("192.168.0.24", 5558)
-        udp_serverAddr = ("192.168.0.16", 4445)
 
-        self._begin_thread(dev, udp_clientAddr, udp_serverAddr)
+        drone = sceneModel.DronesCollection().getActive()
+        
+        #udp_clientAddr = ("192.168.0.24", 5558)
+        #udp_serverAddr = ("192.168.0.16", 4445)
+        udp_clientAddr = (drone.clientAddress, drone.clientPort)
+        udp_serverAddr = (drone.serverAddress, drone.serverPort)
+
+        if not self._begin_thread(dev, udp_clientAddr, udp_serverAddr):
+            PositioningSystemModalOperator.isRunning = False
+            return {'FINISHED'}
         self._observe_drone()
 
         wm = context.window_manager
         wm.modal_handler_add(self)
         self._timer = wm.event_timer_add(0.1, window=context.window)
-        PositioningSystemModalOperator.isRunning = True
         
+        PositioningSystemModalOperator.error_message = ""
+
         return {'RUNNING_MODAL'}
 
 

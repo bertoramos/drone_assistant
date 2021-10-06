@@ -68,7 +68,7 @@ def create_ultrasound_beacon(self, context, beacon_id):
     beacon.rotation_euler = ultrasound_beacon_props.prop_rotation
 
     beacon.protected = True
-
+    
     # Eliminar las siguientes lineas en caso que se quiera que los beacon sean modificables por el usuario
     beacon.hide_select = True
     beacon.lock_location[:] = (True, True, True)

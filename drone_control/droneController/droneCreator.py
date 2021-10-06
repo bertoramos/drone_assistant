@@ -106,7 +106,7 @@ def _create_drone_note(mesh_id, address):
         bpy.data.objects[drone_note_name].parent = bpy.data.objects[mesh_id]
     return drone_note_name
 
-def _add_drone_to_collection(name, start_location, start_rotation, dimension, collider_proportion, address):
+def _add_drone_to_collection(name, start_location, start_rotation, dimension, collider_proportion, address, server_addr, server_port, client_addr, client_port):
 
     # Load mesh
     mesh_id = _load_drone_mesh(name, start_location, start_rotation, dimension)
@@ -115,13 +115,14 @@ def _add_drone_to_collection(name, start_location, start_rotation, dimension, co
     drone_obj = bpy.data.objects[mesh_id]
 
     # Create model
-    drone = sceneModel.droneModel.DroneModel(mesh_id, sceneModel.pose.Pose(drone_obj.location.x,
-                                                                           drone_obj.location.y,
-                                                                           drone_obj.location.z,
-                                                                           drone_obj.rotation_euler.x,
-                                                                           drone_obj.rotation_euler.y,
-                                                                           drone_obj.rotation_euler.z), collider_id, note_id, address)
-
+    pose = sceneModel.pose.Pose(drone_obj.location.x,
+                                drone_obj.location.y,
+                                drone_obj.location.z,
+                                drone_obj.rotation_euler.x,
+                                drone_obj.rotation_euler.y,
+                                drone_obj.rotation_euler.z)
+    
+    drone = sceneModel.droneModel.DroneModel(mesh_id, pose, collider_id, note_id, address, server_addr, server_port, client_addr, client_port)
 
     sceneModel.dronesCollection.DronesCollection().add(drone)
 
@@ -157,7 +158,11 @@ class DroneProps(bpy.types.PropertyGroup):
     prop_drone_rotation: bpy.props.FloatVectorProperty(name="Rotation", description="Initial drone rotation", default=(0.0, 0.0, 0.0), subtype='XYZ', size=3)
     prop_drone_dimension: bpy.props.FloatVectorProperty(name="Dimension", description="Dimension drone ", default=(2.0, 2.0, 1.0), min=0.0, subtype='XYZ', size=3)
     prop_drone_collider_proportion: bpy.props.FloatVectorProperty(name="Margin percentage", description="Drone margin percentage", default=(0.0, 0.0, 0.0), subtype='XYZ', size=3, min=0.0, max=100.0)
-    prop_drone_address: bpy.props.IntProperty(name="address", description="Drone address", min=1)
+    prop_drone_address: bpy.props.IntProperty(name="address", description="Drone address", min=1, default=6)
+    prop_drone_server_address: bpy.props.StringProperty(name="Server address", description="Server address", default="192.168.0.16")
+    prop_drone_server_port: bpy.props.IntProperty(name="Server port", description="Server port", default=4445, min=1)
+    prop_drone_client_address: bpy.props.StringProperty(name="Client address", description="Client address", default="192.168.0.24")
+    prop_drone_client_port: bpy.props.IntProperty(name="Client port", description="Client port", default=5558, min=1)
 
 class CreateDroneOperator(bpy.types.Operator):
     """Creates a drone"""
@@ -177,8 +182,12 @@ class CreateDroneOperator(bpy.types.Operator):
         dimension = context.scene.drone_props.prop_drone_dimension
         collider_proportion = context.scene.drone_props.prop_drone_collider_proportion
         address = context.scene.drone_props.prop_drone_address
+        server_addr = context.scene.drone_props.prop_drone_server_address # "192.168.0.16"
+        server_port = context.scene.drone_props.prop_drone_server_port # 4445
+        client_addr = context.scene.drone_props.prop_drone_client_address # "192.168.0.24"
+        client_port = context.scene.drone_props.prop_drone_client_port # 5558
         
-        full_name = _add_drone_to_collection(name, start_location, start_rotation, dimension, collider_proportion, address)
+        full_name = _add_drone_to_collection(name, start_location, start_rotation, dimension, collider_proportion, address, server_addr, server_port, client_addr, client_port)
         item = context.scene.drones_list.add()
         item.drone_name = full_name
 
@@ -199,6 +208,10 @@ class CreateDroneOperator(bpy.types.Operator):
         self.layout.prop(props, "prop_drone_dimension", text="Dimension")
         self.layout.prop(props, "prop_drone_collider_proportion", text="Margin proportion")
         self.layout.prop(props, "prop_drone_address", text="Address")
+        self.layout.prop(props, "prop_drone_server_address", text="Server address")
+        self.layout.prop(props, "prop_drone_server_port", text="Server port")
+        self.layout.prop(props, "prop_drone_client_address", text="Client address")
+        self.layout.prop(props, "prop_drone_client_port", text="Client port")
 
 class RemoveDroneOperator(bpy.types.Operator):
     """Remove active drone"""
