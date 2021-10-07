@@ -1,6 +1,7 @@
 
 import bpy
 from math import pi
+from mathutils import Euler
 
 from drone_control import sceneModel
 from . import droneControlObserver
@@ -30,6 +31,9 @@ class ManualSimulationModalOperator(bpy.types.Operator):
     def _observe_drone(self):
         DroneMovementHandler().init()
         DroneMovementHandler().start_positioning()
+        self.__yaw = 0
+        self.__pitch = 0
+        self.__roll = 0
     
     def _des_observe_drone(self):
         DroneMovementHandler().stop_plan()
@@ -65,12 +69,12 @@ class ManualSimulationModalOperator(bpy.types.Operator):
     def _apply_rotation(self, keyname):
         angle_speed = 0.3
 
-        action = {'NUMPAD_4': ('Z', +1),
-                  'NUMPAD_6': ('Z', -1),
-                  'NUMPAD_8': ('X', +1),
-                  'NUMPAD_2': ('X', -1),
-                  'NUMPAD_9': ('Y', +1),
-                  'NUMPAD_7': ('Y', -1)}
+        action = {'NUMPAD_4': (self.__yaw, +1),
+                  'NUMPAD_6': (self.__yaw, -1),
+                  'NUMPAD_8': (self.__pitch, +1),
+                  'NUMPAD_2': (self.__pitch, -1),
+                  'NUMPAD_9': (self.__roll, +1),
+                  'NUMPAD_7': (self.__roll, -1)}
 
         omit = {'NUMPAD_1','NUMPAD_3','NUMPAD_5'}
 
@@ -79,7 +83,36 @@ class ManualSimulationModalOperator(bpy.types.Operator):
 
         drone = sceneModel.dronesCollection.DronesCollection().getActive()
         current_pose = drone.pose
+        
+        if keyname == "NUMPAD_4":
+            self.__yaw += 1
 
+        if keyname == "NUMPAD_6":
+            self.__yaw -= 1
+        
+        if keyname == "NUMPAD_8":
+            self.__pitch += 1
+        
+        if keyname == "NUMPAD_2":
+            self.__pitch -= 1
+        
+        if keyname == "NUMPAD_9":
+            self.__roll += 1
+        
+        if keyname == "NUMPAD_7":
+            self.__roll -= 1
+        
+        rotation_val = Euler((0, 0, 0))
+        rotation_val.rotate_axis('Z', self.__yaw)
+        rotation_val.rotate_axis('X', self.__pitch)
+        rotation_val.rotate_axis('Y', self.__roll)
+        
+        current_pose.rotation.x = rotation_val.x
+        current_pose.rotation.y = rotation_val.y
+        current_pose.rotation.z = rotation_val.z
+
+        DroneMovementHandler().notifyAll(current_pose)
+        """
         axis, direction = action[keyname]
         last_val = current_pose.rotation
 
@@ -91,6 +124,7 @@ class ManualSimulationModalOperator(bpy.types.Operator):
 
         # self._notifier.notifyAll(current_pose)
         DroneMovementHandler().notifyAll(current_pose)
+        """
 
         return {'RUNNING_MODAL'}
     
