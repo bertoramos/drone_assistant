@@ -24,7 +24,8 @@ class PlanControllerObserver(Observer):
         self.__current_plan.highlight(self.__next_pose_id)
     
     def _clear_info(self):
-        del HUDWriterOperator._textos['PLAN_EXECUTION_INFO']
+        if 'PLAN_EXECUTION_INFO' in HUDWriterOperator._textos:
+            del HUDWriterOperator._textos['PLAN_EXECUTION_INFO']
         self.__current_plan.no_highlight()
 
     def start(self):
@@ -50,6 +51,7 @@ class PlanControllerObserver(Observer):
     
     def stop(self):
         self.__stopped = True
+        self._clear_info()
         print("STOP PLAN EXECUTION")
     
     def stopped(self):

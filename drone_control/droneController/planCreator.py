@@ -79,7 +79,7 @@ class CreatePlanEditorOperator(bpy.types.Operator):
     def draw(self, context):
         self.layout.prop(self, "new_plan_name")
         self.layout.prop(self, "drone_name")
-
+    
     @classmethod
     def poll(cls, context):
         return not PlanEditor().isActive and \

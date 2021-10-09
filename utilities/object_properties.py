@@ -20,8 +20,10 @@ items = [("TEMPORAL", "Temporal", "", -1),
          ("GEOMETRIC_CURSOR", "Geometric_cursor", "", 12),
          ("STATIC_ULTRASOUND_BEACON", "Static_Ultrasound_Beacon", "", 13),
          ("STATIC_BLUETOOTH_BEACON", "Static_Bluetooth_Beacon", "", 14),
-         ("DRONE", "Drone", "", 15)
-         ]
+         ("DRONE", "Drone", "", 15),
+         ("DRONE_AXIS", "Drone_axis", "", 16),
+         ("DRONE_ARROW", "Drone_arrow", "", 17),
+         ("DRONE_BEARING", "Drone_bearing", "", 18)]
 
 bpy.types.Object.object_type = bpy.props.EnumProperty(items=items, default="OTHER")
 

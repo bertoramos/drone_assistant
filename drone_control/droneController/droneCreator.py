@@ -38,10 +38,10 @@ def lock_object(obj):
     obj.lock_rotation[0:3] = (True, True, True)
     obj.lock_scale[0:3] = (True, True, True)
 
-def _create_drone_boxcollider(mesh_id, collider_proportion):
+def _create_drone_boxcollider(mesh_id, dimensions, collider_proportion):
     drone_obj = bpy.data.objects[mesh_id]
 
-    xdim, ydim, zdim = drone_obj.dimensions.x, drone_obj.dimensions.y, drone_obj.dimensions.z
+    xdim, ydim, zdim = dimensions.x, dimensions.y, dimensions.z
     xperc, yperc, zperc = collider_proportion.x, collider_proportion.y, collider_proportion.z
 
     # Crea, posiciona y escala box collider
@@ -57,7 +57,7 @@ def _create_drone_boxcollider(mesh_id, collider_proportion):
         mat = bpy.data.materials.new(collider_obj.name_full + "_material")
         collider_obj.active_material = mat
         mat.diffuse_color = mathutils.Vector((0, 0, 0, 0.2))
-
+    
     lock_object(collider_obj)
 
     # El box collider es hijo del mesh del drone
@@ -66,6 +66,7 @@ def _create_drone_boxcollider(mesh_id, collider_proportion):
     return collider_obj.name_full
 
 def _load_drone_mesh(name, start_location, start_rotation, dimension):
+    """
     bpy.ops.mesh.primitive_cone_add(radius1=1,
                                     radius2=0,
                                     depth=2,
@@ -89,6 +90,58 @@ def _load_drone_mesh(name, start_location, start_rotation, dimension):
     lock_object(drone_obj)
 
     return mesh_id
+    """
+    bpy.ops.mesh.primitive_cube_add(size=2, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(0.2, 0.2, 0.2))
+    sphere_id = name
+    sphere_obj = bpy.context.active_object
+    sphere_obj.name = sphere_id
+    sphere_id = sphere_obj.name_full
+    sphere_obj.object_type = "DRONE"
+
+    bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+    bearing_id = name + "_bearing"
+    bearing_obj = bpy.context.active_object
+    bearing_obj.name = bearing_id
+    bearing_id = bearing_obj.name_full
+    bpy.data.objects[bearing_id].rotation_euler.x = -pi/2
+    bpy.data.objects[bearing_id].object_type = "DRONE_BEARING"
+
+    bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+    orientation_id = name + "_orientation"
+    orientation_obj = bpy.context.active_object
+    orientation_obj.name = orientation_id
+    orientation_id = orientation_obj.name_full
+    bpy.data.objects[orientation_id].rotation_euler.x = -pi/2
+    bpy.data.objects[orientation_id].object_type = "DRONE_ARROW"
+
+    bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+    axis_id = name + "_axis"
+    axis_obj = bpy.context.active_object
+    axis_obj.name = axis_id
+    axis_id = axis_obj.name_full
+    bpy.data.objects[axis_id].object_type = "DRONE_AXIS"
+    bpy.data.objects[axis_id].show_in_front = True
+
+    bpy.data.objects[orientation_id].parent = bpy.data.objects[axis_id]
+    bpy.data.objects[bearing_id].parent = bpy.data.objects[sphere_id]
+    bpy.data.objects[axis_id].parent = bpy.data.objects[sphere_id]
+
+    bpy.data.objects[sphere_id].location = start_location
+    bpy.data.objects[axis_id].rotation_euler = start_rotation
+
+    lock_object(bpy.data.objects[sphere_id])
+    lock_object(bpy.data.objects[bearing_id])
+    lock_object(bpy.data.objects[orientation_id])
+    lock_object(bpy.data.objects[axis_id])
+
+    return sphere_id
+
+    # bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+    # drone_obj = bpy.data.objects[mesh_id]
+    # drone_obj.location = start_location
+    # drone_obj.rotation_euler = start_rotation
+
 
 def _create_drone_note(mesh_id, address):
     color = mathutils.Vector((1.0, 1.0, 1.0, 1.0))
@@ -107,10 +160,9 @@ def _create_drone_note(mesh_id, address):
     return drone_note_name
 
 def _add_drone_to_collection(name, start_location, start_rotation, dimension, collider_proportion, address, server_addr, server_port, client_addr, client_port):
-
     # Load mesh
     mesh_id = _load_drone_mesh(name, start_location, start_rotation, dimension)
-    collider_id = _create_drone_boxcollider(mesh_id, collider_proportion)
+    collider_id = _create_drone_boxcollider(mesh_id, dimension, collider_proportion)
     note_id = _create_drone_note(mesh_id, address)
     drone_obj = bpy.data.objects[mesh_id]
 
@@ -123,9 +175,7 @@ def _add_drone_to_collection(name, start_location, start_rotation, dimension, co
                                 drone_obj.rotation_euler.z)
     
     drone = sceneModel.droneModel.DroneModel(mesh_id, pose, collider_id, note_id, address, server_addr, server_port, client_addr, client_port)
-
     sceneModel.dronesCollection.DronesCollection().add(drone)
-
     return mesh_id
 
 ################################################################################

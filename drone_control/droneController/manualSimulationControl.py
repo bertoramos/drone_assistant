@@ -14,6 +14,11 @@ def register():
 def unregister():
     pass
 
+# TODO: Añadir vectores en direcciones adelante, derecha y arriba
+# TODO: Aplicar rotaciones a vectores cuando se aplique al drone una rotacion
+# TODO: Considerar avance del robot segun los vectores
+# TODO: Buscar si en blender se puede mover un objeto segun los ejes LOCALES
+
 class ManualSimulationModalOperator(bpy.types.Operator):
     """Operator which runs its self from a timer"""
     bl_idname = "scene.manual_simulation_modal_operator"
@@ -86,7 +91,7 @@ class ManualSimulationModalOperator(bpy.types.Operator):
         
         if keyname == "NUMPAD_4":
             self.__yaw += 1
-
+        
         if keyname == "NUMPAD_6":
             self.__yaw -= 1
         
