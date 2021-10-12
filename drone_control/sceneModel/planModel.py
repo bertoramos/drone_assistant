@@ -7,12 +7,160 @@ from .pose import Pose
 from drone_control.utilsAlgorithm import draw_text
 from .dronesCollection import DronesCollection
 
-def remove_cursor(name):
-    obj = bpy.data.objects[name]
-    for child in obj.children:
-        bpy.data.objects.remove(child)
-    bpy.data.objects.remove(obj)
 
+def lock_object(obj):
+    obj.protected = True
+    obj.lock_location[0:3] = (True, True, True)
+    obj.lock_rotation[0:3] = (True, True, True)
+    obj.lock_scale[0:3] = (True, True, True)
+
+
+def drop(obj):
+    obj_name = obj.name
+    mesh = obj.data
+    material = obj.active_material
+
+    # Eliminamos objeto
+    if obj_name in bpy.data.objects:
+        bpy.data.objects.remove(bpy.data.objects[obj_name], do_unlink=True)
+
+    # Eliminamos el mesh que lo forma
+    if mesh is not None:
+        mesh_name = mesh.name
+        if mesh_name in bpy.data.meshes:
+            bpy.data.meshes.remove(bpy.data.meshes[mesh_name], do_unlink=True)
+        if mesh_name in bpy.data.lights:
+            bpy.data.lights.remove(bpy.data.lights[mesh_name], do_unlink=True)
+
+    # Eliminamos su material
+    if material is not None:
+        material_name = material.name
+        if material_name in bpy.data.materials:
+            bpy.data.materials.remove(bpy.data.materials[material_name], do_unlink=True)
+    # bpy.ops.select_all
+    bpy.ops.object.select_all(action='DESELECT')
+
+
+def get_children(parent):
+    not_visited = [parent]
+    children = []
+    while len(not_visited) > 0:
+        current_node = not_visited.pop(0)
+        children.extend(current_node.children)
+        not_visited.extend(current_node.children)
+    return children
+
+
+def remove_cursor(to_delete_obj):
+    protected_obj = []
+    to_delete = [to_delete_obj] # map deleted objects : avoid an invalid object error when the child of a selected object is also selected
+    for obj in to_delete:
+        children = get_children(obj)
+        for child in children:
+            if child in to_delete: # indicates selected child was deleted
+                to_delete.remove(child)
+            drop(child)
+    drop(obj)
+
+def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_num):
+    bpy.ops.mesh.primitive_cube_add(size=2, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(0.2, 0.2, 0.2))
+    sphere_id = "Cursor"
+    sphere_obj = bpy.context.active_object
+    sphere_obj.name = sphere_id
+    sphere_id = sphere_obj.name_full
+    sphere_obj.object_type = "PATH_ELEMENTS"
+
+    # bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+    # bearing_id = name + "_bearing"
+    # bearing_obj = bpy.context.active_object
+    # bearing_obj.name = bearing_id
+    # bearing_id = bearing_obj.name_full
+    # bpy.data.objects[bearing_id].rotation_euler.x = -pi/2
+    # bpy.data.objects[bearing_id].object_type = "DRONE_BEARING"
+    # bpy.data.objects[bearing_id].show_in_front = True
+
+    bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+    orientation_id = "Cursor_orientation"
+    orientation_obj = bpy.context.active_object
+    orientation_obj.name = orientation_id
+    orientation_id = orientation_obj.name_full
+    bpy.data.objects[orientation_id].rotation_euler.x = -math.pi/2
+    bpy.data.objects[orientation_id].object_type = "DRONE_ARROW"
+    bpy.data.objects[orientation_id].show_in_front = True
+
+    bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+    axis_id = "Cursor_axis"
+    axis_obj = bpy.context.active_object
+    axis_obj.name = axis_id
+    axis_id = axis_obj.name_full
+    bpy.data.objects[axis_id].object_type = "DRONE_AXIS"
+    bpy.data.objects[axis_id].show_in_front = True
+
+    bpy.data.objects[orientation_id].parent = bpy.data.objects[axis_id]
+    # bpy.data.objects[bearing_id].parent = bpy.data.objects[sphere_id]
+    bpy.data.objects[axis_id].parent = bpy.data.objects[sphere_id]
+
+    bpy.data.objects[sphere_id].location = location
+    bpy.data.objects[axis_id].rotation_euler = rotation
+
+
+    bpy.ops.mesh.primitive_cube_add(enter_editmode=False,
+                                    align='WORLD',
+                                    location=(0, 0, 0),
+                                    scale=(1, 1, 1))
+
+    # Collider obj
+    collider_obj = bpy.context.active_object
+    collider_obj.lock_location[0:3] = (True, True, True)
+    collider_obj.lock_rotation[0:3] = (True, True, True)
+    collider_obj.lock_scale[0:3] = (True, True, True)
+    collider_obj.dimensions = margin_dim
+    collider_obj.scale = margin_scale
+
+    collider_obj.parent = sphere_obj
+
+    collider_obj.object_type = 'ROBOT_MARGIN'
+
+    collider_obj.hide_select = True
+
+    # Añade un material translucido
+    if collider_obj.active_material is None:
+        mat = bpy.data.materials.new(collider_obj.name_full + "_material")
+        collider_obj.active_material = mat
+        mat.diffuse_color = mathutils.Vector((0, 0, 0, 0.2))
+
+    # lock_object(bpy.data.objects[sphere_id])
+    # lock_object(bpy.data.objects[bearing_id])
+    lock_object(bpy.data.objects[orientation_id])
+    lock_object(bpy.data.objects[axis_id])
+    lock_object(bpy.data.objects[collider_obj.name_full])
+
+    # Dibuja anotacion
+    color = mathutils.Vector((1.0, 1.0, 1.0, 1.0))
+    font = 14
+    font_align = 'C'
+    hint_space = 0.1
+    font_rotation = 0
+    text = f"{position_num}"
+
+    position_note_name = draw_text(bpy.context, "Note_pose", text, mathutils.Vector((0,0,0)), color, hint_space, font, font_align, font_rotation)
+    if position_note_name is not None:
+        note_obj = bpy.data.objects[position_note_name]
+        note_obj.protected = True
+        note_obj.lock_location[0:3] = (True, True, True)
+        note_obj.lock_rotation[0:3] = (True, True, True)
+        note_obj.lock_scale[0:3] = (True, True, True)
+
+        note_obj.parent = sphere_obj
+
+    if sphere_obj.active_material is None:
+        mat = bpy.data.materials.new(sphere_obj.name_full + "_material")
+        sphere_obj.active_material = mat
+        mat.diffuse_color = mathutils.Vector((1.0, 1.0, 1.0, 0.6))
+
+    return sphere_id
+
+"""
 def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_num):
     bpy.ops.mesh.primitive_cone_add(radius1=1,
                                     radius2=0,
@@ -84,6 +232,7 @@ def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_nu
         mat.diffuse_color = mathutils.Vector((1.0, 1.0, 1.0, 0.6))
 
     return cursor_name
+"""
 
 class PlanModel:
 
@@ -141,7 +290,7 @@ class PlanModel:
 
     def delete(self):
         for name in self.__plan_meshes:
-            remove_cursor(name)
+            remove_cursor(bpy.data.objects[name])
         self.__plan_meshes.clear()
 
     def __iter__(self):

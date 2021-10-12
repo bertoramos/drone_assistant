@@ -15,6 +15,15 @@ class DroneModel(MeshModel):
         self.__client_address = client_address
         self.__client_port = client_port
     
+    def translate(self, pose: Pose):
+        super().translate(pose)
+        if self.meshID in bpy.data.objects:
+            bpy.data.objects[self.meshID].location = pose.location
+            bpy.data.objects[self.meshID].rotation_euler = pose.rotation
+        else:
+            import warnings
+            warnings.warn(f"'{self.__meshID}' object not found in current scene", RuntimeWarning)
+    
     def __get_address(self):
         return self.__address
     

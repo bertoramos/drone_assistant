@@ -26,7 +26,7 @@ def _redraw_plan(mesh_names, drone_dim, margin_dim, margin_scale):
     for pid, name in enumerate(mesh_names):
         cursor_obj = bpy.data.objects[name]
         cursor_name = create_cursor(cursor_obj.location, cursor_obj.rotation_euler, drone_dim, margin_dim, margin_scale, pid)
-        remove_cursor(name)
+        remove_cursor(bpy.data.objects[name])
         newList.append(cursor_name)
         PlanValidatorOperator._new_cursor_detected(bpy.data.objects[cursor_name])
     return newList
@@ -73,7 +73,7 @@ class PlanEditor(metaclass=Singleton):
         self.__current_planID = None
         self.__current_droneID = None
         for name in self.__poses_mesh_names:
-            remove_cursor(name)
+            remove_cursor(bpy.data.objects[name])
         self.__poses_mesh_names.clear()
 
 
@@ -130,7 +130,7 @@ class PlanEditor(metaclass=Singleton):
         else:
             last_obj = bpy.data.objects[self.__poses_mesh_names[-1]]
             last_location = last_obj.location
-            last_rotation = last_obj.rotation_euler
+            last_rotation = mathutils.Euler((0, 0, 0)) #last_obj.rotation_euler
             position_num = len(self.__poses_mesh_names)
 
         drone = DronesCollection().get(self.__current_droneID)
@@ -153,7 +153,7 @@ class PlanEditor(metaclass=Singleton):
         obj_delete = [obj for obj in bpy.context.selected_objects if obj.name_full in self.__poses_mesh_names]
         for obj in obj_delete:
             obj_name = obj.name_full
-            remove_cursor(obj_name)
+            remove_cursor(bpy.data.objects[obj_name])
             self.__poses_mesh_names.remove(obj_name)
             PlanValidatorOperator._del_cursor_detected(obj_name)
 

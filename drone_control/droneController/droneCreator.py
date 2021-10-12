@@ -38,17 +38,14 @@ def lock_object(obj):
     obj.lock_rotation[0:3] = (True, True, True)
     obj.lock_scale[0:3] = (True, True, True)
 
-def _create_drone_boxcollider(mesh_id, dimensions, collider_proportion):
+def _create_drone_boxcollider(mesh_id, dimensions):
     drone_obj = bpy.data.objects[mesh_id]
 
     xdim, ydim, zdim = dimensions.x, dimensions.y, dimensions.z
-    xperc, yperc, zperc = collider_proportion.x, collider_proportion.y, collider_proportion.z
-
     # Crea, posiciona y escala box collider
     bpy.ops.mesh.primitive_cube_add(size=2, enter_editmode=False, align='WORLD', location=(0.,0.,0.), rotation=(0.,0.,0.))
     collider_obj = bpy.context.active_object
     collider_obj.name = mesh_id + "_box_collider"
-    collider_obj.dimensions = mathutils.Vector((xdim + (xdim*xperc/100), ydim + (ydim*yperc/100), zdim + (zdim*zperc/100)))
 
     collider_obj.object_type = 'ROBOT_MARGIN'
 
@@ -61,50 +58,41 @@ def _create_drone_boxcollider(mesh_id, dimensions, collider_proportion):
     lock_object(collider_obj)
 
     # El box collider es hijo del mesh del drone
-    collider_obj.parent = drone_obj
+    # collider_obj.parent = drone_obj
+    collider_obj.dimensions = mathutils.Vector((xdim, ydim, zdim))
+    collider_obj.location = drone_obj.location.copy()
+    collider_obj.rotation_euler = drone_obj.rotation_euler.copy()
+
+    bpy.ops.object.select_all(action='DESELECT')
+    drone_obj.select_set(True)
+    collider_obj.select_set(True)
+    bpy.context.view_layer.objects.active = drone_obj
+    bpy.ops.object.parent_set(type='OBJECT', keep_transform=False)
+
+    collider_obj.hide_select = True
 
     return collider_obj.name_full
 
 def _load_drone_mesh(name, start_location, start_rotation, dimension):
-    """
-    bpy.ops.mesh.primitive_cone_add(radius1=1,
-                                    radius2=0,
-                                    depth=2,
-                                    end_fill_type='NGON', calc_uvs=True, enter_editmode=False, align='WORLD',
-                                    location=(0, 0, 0),
-                                    rotation=(-pi/2, 0, 0),
-                                    scale=(1, 0.5, 1))
-    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-
-    # nombre dado por el usuario
-    bpy.context.active_object.name = name
-    mesh_id = bpy.context.active_object.name_full
-
-    drone_obj = bpy.data.objects[mesh_id]
-    drone_obj.location = start_location
-    drone_obj.rotation_euler = start_rotation
-    drone_obj.dimensions = dimension
-
-    drone_obj.object_type = "DRONE"
-
-    lock_object(drone_obj)
-
-    return mesh_id
-    """
     bpy.ops.mesh.primitive_cube_add(size=2, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(0.2, 0.2, 0.2))
     sphere_id = name
     sphere_obj = bpy.context.active_object
     sphere_obj.name = sphere_id
     sphere_id = sphere_obj.name_full
     sphere_obj.object_type = "DRONE"
+    base_dim = 0.5
+    xdim = 0.9*dimension.x if dimension.x < base_dim else base_dim
+    ydim = 0.9*dimension.y if dimension.y < base_dim else base_dim
+    zdim = 0.9*dimension.z if dimension.z < base_dim else base_dim
 
-    bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
-    bearing_id = name + "_bearing"
-    bearing_obj = bpy.context.active_object
-    bearing_obj.name = bearing_id
-    bearing_id = bearing_obj.name_full
-    bpy.data.objects[bearing_id].rotation_euler.x = -pi/2
-    bpy.data.objects[bearing_id].object_type = "DRONE_BEARING"
+    # bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+    # bearing_id = name + "_bearing"
+    # bearing_obj = bpy.context.active_object
+    # bearing_obj.name = bearing_id
+    # bearing_id = bearing_obj.name_full
+    # bpy.data.objects[bearing_id].rotation_euler.x = -pi/2
+    # bpy.data.objects[bearing_id].object_type = "DRONE_BEARING"
+    # bpy.data.objects[bearing_id].show_in_front = True
 
     bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
     orientation_id = name + "_orientation"
@@ -113,6 +101,7 @@ def _load_drone_mesh(name, start_location, start_rotation, dimension):
     orientation_id = orientation_obj.name_full
     bpy.data.objects[orientation_id].rotation_euler.x = -pi/2
     bpy.data.objects[orientation_id].object_type = "DRONE_ARROW"
+    bpy.data.objects[orientation_id].show_in_front = True
 
     bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
     axis_id = name + "_axis"
@@ -123,16 +112,20 @@ def _load_drone_mesh(name, start_location, start_rotation, dimension):
     bpy.data.objects[axis_id].show_in_front = True
 
     bpy.data.objects[orientation_id].parent = bpy.data.objects[axis_id]
-    bpy.data.objects[bearing_id].parent = bpy.data.objects[sphere_id]
+    # bpy.data.objects[bearing_id].parent = bpy.data.objects[sphere_id]
     bpy.data.objects[axis_id].parent = bpy.data.objects[sphere_id]
 
     bpy.data.objects[sphere_id].location = start_location
-    bpy.data.objects[axis_id].rotation_euler = start_rotation
-
+    bpy.data.objects[sphere_id].rotation_euler = start_rotation
+    bpy.data.objects[sphere_id].dimensions = mathutils.Vector((xdim, ydim, zdim))
+    
     lock_object(bpy.data.objects[sphere_id])
-    lock_object(bpy.data.objects[bearing_id])
+    # lock_object(bpy.data.objects[bearing_id])
     lock_object(bpy.data.objects[orientation_id])
     lock_object(bpy.data.objects[axis_id])
+
+    bpy.data.objects[orientation_id].hide_select = True
+    bpy.data.objects[axis_id].hide_select = True
 
     return sphere_id
 
@@ -159,10 +152,10 @@ def _create_drone_note(mesh_id, address):
         bpy.data.objects[drone_note_name].parent = bpy.data.objects[mesh_id]
     return drone_note_name
 
-def _add_drone_to_collection(name, start_location, start_rotation, dimension, collider_proportion, address, server_addr, server_port, client_addr, client_port):
+def _add_drone_to_collection(name, start_location, start_rotation, dimension, address, server_addr, server_port, client_addr, client_port):
     # Load mesh
     mesh_id = _load_drone_mesh(name, start_location, start_rotation, dimension)
-    collider_id = _create_drone_boxcollider(mesh_id, dimension, collider_proportion)
+    collider_id = _create_drone_boxcollider(mesh_id, dimension)
     note_id = _create_drone_note(mesh_id, address)
     drone_obj = bpy.data.objects[mesh_id]
 
@@ -206,8 +199,7 @@ class DroneProps(bpy.types.PropertyGroup):
     prop_drone_name: bpy.props.StringProperty(name="Name", description="Drone name",default="Drone", maxlen=20)
     prop_drone_location: bpy.props.FloatVectorProperty(name="Location", description="Initial drone location", default=(0.0, 0.0, 0.0), subtype='XYZ', size=3)
     prop_drone_rotation: bpy.props.FloatVectorProperty(name="Rotation", description="Initial drone rotation", default=(0.0, 0.0, 0.0), subtype='XYZ', size=3)
-    prop_drone_dimension: bpy.props.FloatVectorProperty(name="Dimension", description="Dimension drone ", default=(2.0, 2.0, 1.0), min=0.0, subtype='XYZ', size=3)
-    prop_drone_collider_proportion: bpy.props.FloatVectorProperty(name="Margin percentage", description="Drone margin percentage", default=(0.0, 0.0, 0.0), subtype='XYZ', size=3, min=0.0, max=100.0)
+    prop_drone_dimension: bpy.props.FloatVectorProperty(name="Dimension", description="Dimension drone ", default=(0.5, 0.5, 0.5), min=0.0, subtype='XYZ', size=3)
     prop_drone_address: bpy.props.IntProperty(name="address", description="Drone address", min=1, default=6)
     prop_drone_server_address: bpy.props.StringProperty(name="Server address", description="Server address", default="192.168.0.16")
     prop_drone_server_port: bpy.props.IntProperty(name="Server port", description="Server port", default=4445, min=1)
@@ -230,14 +222,13 @@ class CreateDroneOperator(bpy.types.Operator):
         start_location = context.scene.drone_props.prop_drone_location
         start_rotation = _toRadians(context.scene.drone_props.prop_drone_rotation)
         dimension = context.scene.drone_props.prop_drone_dimension
-        collider_proportion = context.scene.drone_props.prop_drone_collider_proportion
         address = context.scene.drone_props.prop_drone_address
         server_addr = context.scene.drone_props.prop_drone_server_address # "192.168.0.16"
         server_port = context.scene.drone_props.prop_drone_server_port # 4445
         client_addr = context.scene.drone_props.prop_drone_client_address # "192.168.0.24"
         client_port = context.scene.drone_props.prop_drone_client_port # 5558
         
-        full_name = _add_drone_to_collection(name, start_location, start_rotation, dimension, collider_proportion, address, server_addr, server_port, client_addr, client_port)
+        full_name = _add_drone_to_collection(name, start_location, start_rotation, dimension, address, server_addr, server_port, client_addr, client_port)
         item = context.scene.drones_list.add()
         item.drone_name = full_name
 
@@ -256,7 +247,6 @@ class CreateDroneOperator(bpy.types.Operator):
         self.layout.prop(props, "prop_drone_location", text="Location")
         self.layout.prop(props, "prop_drone_rotation", text="Rotation")
         self.layout.prop(props, "prop_drone_dimension", text="Dimension")
-        self.layout.prop(props, "prop_drone_collider_proportion", text="Margin proportion")
         self.layout.prop(props, "prop_drone_address", text="Address")
         self.layout.prop(props, "prop_drone_server_address", text="Server address")
         self.layout.prop(props, "prop_drone_server_port", text="Server port")
