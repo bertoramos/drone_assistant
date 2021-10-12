@@ -68,16 +68,8 @@ def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_nu
     sphere_obj = bpy.context.active_object
     sphere_obj.name = sphere_id
     sphere_id = sphere_obj.name_full
+    sphere_obj.dimensions = dim
     sphere_obj.object_type = "PATH_ELEMENTS"
-
-    # bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
-    # bearing_id = name + "_bearing"
-    # bearing_obj = bpy.context.active_object
-    # bearing_obj.name = bearing_id
-    # bearing_id = bearing_obj.name_full
-    # bpy.data.objects[bearing_id].rotation_euler.x = -pi/2
-    # bpy.data.objects[bearing_id].object_type = "DRONE_BEARING"
-    # bpy.data.objects[bearing_id].show_in_front = True
 
     bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
     orientation_id = "Cursor_orientation"
@@ -96,8 +88,10 @@ def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_nu
     bpy.data.objects[axis_id].object_type = "DRONE_AXIS"
     bpy.data.objects[axis_id].show_in_front = True
 
+    bpy.data.objects[orientation_id].hide_select = True
+    bpy.data.objects[axis_id].hide_select = True
+
     bpy.data.objects[orientation_id].parent = bpy.data.objects[axis_id]
-    # bpy.data.objects[bearing_id].parent = bpy.data.objects[sphere_id]
     bpy.data.objects[axis_id].parent = bpy.data.objects[sphere_id]
 
     bpy.data.objects[sphere_id].location = location
@@ -114,10 +108,16 @@ def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_nu
     collider_obj.lock_location[0:3] = (True, True, True)
     collider_obj.lock_rotation[0:3] = (True, True, True)
     collider_obj.lock_scale[0:3] = (True, True, True)
+    collider_obj.location = sphere_obj.location
     collider_obj.dimensions = margin_dim
     collider_obj.scale = margin_scale
 
-    collider_obj.parent = sphere_obj
+    #collider_obj.parent = sphere_obj
+    bpy.ops.object.select_all(action='DESELECT')
+    sphere_obj.select_set(True)
+    collider_obj.select_set(True)
+    bpy.context.view_layer.objects.active = sphere_obj
+    bpy.ops.object.parent_set(type='OBJECT', keep_transform=False)
 
     collider_obj.object_type = 'ROBOT_MARGIN'
 

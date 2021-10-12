@@ -32,6 +32,7 @@ class EditorPanel(bpy.types.Panel):
         row.operator(droneController.planCreator.ActivePlanOperator.bl_idname, icon="RESTRICT_SELECT_OFF")
         row.operator(droneController.planCreator.DesactivePlanOperator.bl_idname, icon="RESTRICT_SELECT_ON")
 
+        self.layout.operator(droneController.PlanGeneratorModalOperator.bl_idname)
         self.layout.operator(droneController.planCreator.TemporalShowPlanOperator.bl_idname)
 
 class EditorToolsPanel(bpy.types.Panel):

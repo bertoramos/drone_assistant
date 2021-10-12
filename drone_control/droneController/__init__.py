@@ -28,3 +28,5 @@ from .manualSimulationControl import ManualSimulationModalOperator
 
 from .planExecutionOperator import TogglePlanOperator
 from .droneMovementHandler import DroneMovementHandler
+
+from .plan_generator import PlanGeneratorModalOperator
