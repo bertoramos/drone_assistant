@@ -284,7 +284,7 @@ class PlanValidatorOperator(bpy.types.Operator):
             for o_name in list(PlanValidatorOperator._changes_obj_dict):
                 if o_name not in bpy.data.objects:
                     PlanValidatorOperator._del_obj_detected(o_name)
-
+        
         return {'PASS_THROUGH'}
 
     def execute(self, context):

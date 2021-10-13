@@ -49,13 +49,23 @@ class HUDWriterOperator(bpy.types.Operator):
     _open = False
     _textos = {}
 
+    def redraw(self, context):
+        context.area.tag_redraw()
+        for screen in bpy.context.workspace.screens:
+            for area in screen.areas:
+                area.tag_redraw()
+
+    @classmethod
+    def poll(cls, context):
+        return context.area.type == "VIEW_3D"
+
     def modal(self, context, event):
         if event.type == 'TIMER':
-            context.area.tag_redraw()
+            self.redraw()
         
         if not HUDWriterOperator._open:
             bpy.types.SpaceView3D.draw_handler_remove(self._handler, 'WINDOW')
-            context.area.tag_redraw()
+            self.redraw()
             return {'FINISHED'}
         
         return {'PASS_THROUGH'}
