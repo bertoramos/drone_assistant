@@ -74,25 +74,16 @@ def _create_drone_boxcollider(mesh_id, dimensions):
     return collider_obj.name_full
 
 def _load_drone_mesh(name, start_location, start_rotation, dimension):
-    bpy.ops.mesh.primitive_cube_add(size=2, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(0.2, 0.2, 0.2))
+    bpy.ops.mesh.primitive_cube_add(size=2, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
     sphere_id = name
     sphere_obj = bpy.context.active_object
     sphere_obj.name = sphere_id
     sphere_id = sphere_obj.name_full
     sphere_obj.object_type = "DRONE"
-    base_dim = 0.5
+    base_dim = 0.2
     xdim = 0.9*dimension.x if dimension.x < base_dim else base_dim
     ydim = 0.9*dimension.y if dimension.y < base_dim else base_dim
     zdim = 0.9*dimension.z if dimension.z < base_dim else base_dim
-
-    # bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
-    # bearing_id = name + "_bearing"
-    # bearing_obj = bpy.context.active_object
-    # bearing_obj.name = bearing_id
-    # bearing_id = bearing_obj.name_full
-    # bpy.data.objects[bearing_id].rotation_euler.x = -pi/2
-    # bpy.data.objects[bearing_id].object_type = "DRONE_BEARING"
-    # bpy.data.objects[bearing_id].show_in_front = True
 
     bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
     orientation_id = name + "_orientation"
@@ -103,7 +94,7 @@ def _load_drone_mesh(name, start_location, start_rotation, dimension):
     bpy.data.objects[orientation_id].object_type = "DRONE_ARROW"
     bpy.data.objects[orientation_id].show_in_front = True
 
-    bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
+    bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD', location=(0, 0, 0), scale=(4, 4, 4))
     axis_id = name + "_axis"
     axis_obj = bpy.context.active_object
     axis_obj.name = axis_id
@@ -127,13 +118,9 @@ def _load_drone_mesh(name, start_location, start_rotation, dimension):
     bpy.data.objects[orientation_id].hide_select = True
     bpy.data.objects[axis_id].hide_select = True
 
+    axis_obj.scale = mathutils.Vector((4,4,4))
+    
     return sphere_id
-
-    # bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-
-    # drone_obj = bpy.data.objects[mesh_id]
-    # drone_obj.location = start_location
-    # drone_obj.rotation_euler = start_rotation
 
 
 def _create_drone_note(mesh_id, address):

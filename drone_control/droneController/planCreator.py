@@ -110,7 +110,7 @@ class CreatePlanEditorOperator(bpy.types.Operator):
         PlanEditor().openEditor(self.new_plan_name, self.drone_name)
 
         print(self.drone_name)
-
+        
         logger = logging.getLogger("myblenderlog")
         logger.info(f"Editor panel was open: Creating {self.new_plan_name} plan")
 

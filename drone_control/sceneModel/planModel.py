@@ -63,12 +63,16 @@ def remove_cursor(to_delete_obj):
     drop(obj)
 
 def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_num):
-    bpy.ops.mesh.primitive_cube_add(size=2, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(0.2, 0.2, 0.2))
+    bpy.ops.mesh.primitive_cube_add(size=2, enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
     sphere_id = "Cursor"
     sphere_obj = bpy.context.active_object
     sphere_obj.name = sphere_id
     sphere_id = sphere_obj.name_full
-    sphere_obj.dimensions = dim
+    base_dim = 0.2
+    xdim = 0.9*dim.x if dim.x < base_dim else base_dim
+    ydim = 0.9*dim.y if dim.y < base_dim else base_dim
+    zdim = 0.9*dim.z if dim.z < base_dim else base_dim
+    sphere_obj.dimensions = mathutils.Vector((xdim, ydim, zdim))
     sphere_obj.object_type = "PATH_ELEMENTS"
 
     bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
@@ -156,7 +160,10 @@ def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_nu
     if sphere_obj.active_material is None:
         mat = bpy.data.materials.new(sphere_obj.name_full + "_material")
         sphere_obj.active_material = mat
-        mat.diffuse_color = mathutils.Vector((1.0, 1.0, 1.0, 0.6))
+        mat.diffuse_color = mathutils.Vector((1.0, 1.0, 1.0, 0.05))
+    
+
+    axis_obj.scale = mathutils.Vector((4,4,4))
 
     return sphere_id
 

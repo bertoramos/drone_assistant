@@ -61,11 +61,11 @@ class HUDWriterOperator(bpy.types.Operator):
 
     def modal(self, context, event):
         if event.type == 'TIMER':
-            self.redraw()
+            self.redraw(context)
         
         if not HUDWriterOperator._open:
             bpy.types.SpaceView3D.draw_handler_remove(self._handler, 'WINDOW')
-            self.redraw()
+            self.redraw(context)
             return {'FINISHED'}
         
         return {'PASS_THROUGH'}

@@ -17,10 +17,15 @@ class PlanControllerObserver(Observer):
     def _show_info(self, pose):
         loc_dist = pose.get_location_distance(self.__next_pose)
         rot_dist = pose.get_rotation_distance(self.__next_pose)
-        txt = Texto()
-        txt.text = f"next_pose={self.__next_pose_id} {loc_dist = :0.4f} meters and {rot_dist = :0.4f} degrees"
-        HUDWriterOperator._textos['PLAN_EXECUTION_INFO'] = txt
 
+        xdist = abs(pose.location.x - self.__next_pose.location.x)
+        ydist = abs(pose.location.y - self.__next_pose.location.y)
+        zdist = abs(pose.location.z - self.__next_pose.location.z)
+
+        txt = Texto()
+        txt.text = f"next_pose={self.__next_pose_id} | X: {xdist:0.4f} Y: {ydist:0.4f} Z: {zdist:0.4f}"
+        HUDWriterOperator._textos['PLAN_EXECUTION_INFO'] = txt
+        
         self.__current_plan.highlight(self.__next_pose_id)
     
     def _clear_info(self):
