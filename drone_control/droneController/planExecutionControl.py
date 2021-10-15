@@ -23,7 +23,7 @@ class PlanControllerObserver(Observer):
         zdist = abs(pose.location.z - self.__next_pose.location.z)
 
         txt = Texto()
-        txt.text = f"next_pose={self.__next_pose_id} | X: {xdist:0.4f} Y: {ydist:0.4f} Z: {zdist:0.4f}"
+        txt.text = f"next_pose={self.__next_pose_id} | X: {xdist:0.4f} Y: {ydist:0.4f} Z: {zdist:0.4f} | Height: {pose.location.z:0.4f}"
         HUDWriterOperator._textos['PLAN_EXECUTION_INFO'] = txt
         
         self.__current_plan.highlight(self.__next_pose_id)
