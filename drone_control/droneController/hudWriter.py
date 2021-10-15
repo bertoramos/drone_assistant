@@ -106,5 +106,6 @@ class ShowHUDPanel(bpy.types.Panel):
     bl_category = "Options" # Add new tab to N-Panel
 
     def draw(self, context):
-        txt = "Stop" if HUDWriterOperator._open else "Start"
-        self.layout.operator(ShowHUDOperator.bl_idname, text=txt)
+        txt = "Hide HUD information" if HUDWriterOperator._open else "Show HUD information"
+        icon = "HIDE_ON" if HUDWriterOperator._open else "HIDE_OFF"
+        self.layout.operator(ShowHUDOperator.bl_idname, text=txt, icon=icon)
