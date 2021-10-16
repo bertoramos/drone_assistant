@@ -1,11 +1,15 @@
 
 import bpy
+import bgl
 import blf
+import gpu
+from gpu_extras.batch import batch_for_shader
 
 from dataclasses import dataclass
+from typing import List
 
-@dataclass(frozen=True)
-class TextColor:
+@dataclass
+class RGBAColor:
     red  : float
     green: float
     blue : float
@@ -26,14 +30,37 @@ class Texto:
     size: int = 20
     dpi : int = 72
 
-    text_color: TextColor = TextColor(0,0,0,1)
+    text_color: RGBAColor = RGBAColor(0,0,0,1)
 
     text: str = "TEXTO"
 
+@dataclass
+class Point2D:
+    x: float
+    y: float
+
+@dataclass
+class Point3D:
+    x: float
+    y: float
+    z: float
+
+@dataclass
+class Curve:
+    points : List
+    color : RGBAColor = RGBAColor(0,0,0,1)
+
+
+def __draw_curve_3d(points, color):
+    shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+    batch = batch_for_shader(shader, 'LINE_STRIP', {"pos": points})
+    shader.bind()
+    shader.uniform_float("color", color)
+    batch.draw(shader)
 
 def draw_callback_px(self, context):
     font_id = 0
-
+    # Draw text 2D
     for k in HUDWriterOperator._textos:
         txt = HUDWriterOperator._textos[k]
         
@@ -42,12 +69,36 @@ def draw_callback_px(self, context):
         blf.color(txt.font_id, txt.text_color.red, txt.text_color.green, txt.text_color.blue, txt.text_color.alpha)
         blf.draw(txt.font_id, txt.text)
 
+def draw_view_callback_px(self, context):
+    
+    bgl.glEnable(bgl.GL_BLEND)
+    bgl.glEnable(bgl.GL_LINE_SMOOTH)
+    bgl.glEnable(bgl.GL_DEPTH_TEST)
+    
+    for k in HUDWriterOperator._curves_3d:
+        curve = HUDWriterOperator._curves_3d[k]
+
+        points = []
+        for p in curve.points:
+            if type(p) == Point3D:
+                xi, yi, zi = p.x, p.y, p.z
+                points.append((xi, yi, zi))
+        color = (curve.color.red, curve.color.green, curve.color.blue, curve.color.alpha)
+
+        __draw_curve_3d(points, color)
+    
+    bgl.glLineWidth(1)
+    bgl.glDisable(bgl.GL_BLEND)
+    bgl.glDisable(bgl.GL_LINE_SMOOTH)
+    bgl.glEnable(bgl.GL_DEPTH_TEST)
+
 class HUDWriterOperator(bpy.types.Operator):
     bl_idname = "wm.hudwriter"
     bl_label = "HUDWriter"
     
     _open = False
     _textos = {}
+    _curves_3d = {}
 
     def redraw(self, context):
         context.area.tag_redraw()
@@ -64,7 +115,8 @@ class HUDWriterOperator(bpy.types.Operator):
             self.redraw(context)
         
         if not HUDWriterOperator._open:
-            bpy.types.SpaceView3D.draw_handler_remove(self._handler, 'WINDOW')
+            bpy.types.SpaceView3D.draw_handler_remove(self._handler_2d, 'WINDOW')
+            bpy.types.SpaceView3D.draw_handler_remove(self._handler_3d, 'WINDOW')
             self.redraw(context)
             return {'FINISHED'}
         
@@ -73,7 +125,9 @@ class HUDWriterOperator(bpy.types.Operator):
     def invoke(self, context, event):
         if context.area.type == 'VIEW_3D':
             args = (self, context)
-            self._handler = bpy.types.SpaceView3D.draw_handler_add(draw_callback_px, args, 'WINDOW', 'POST_PIXEL')
+
+            self._handler_2d = bpy.types.SpaceView3D.draw_handler_add(draw_callback_px, args, 'WINDOW', 'POST_PIXEL')
+            self._handler_3d = bpy.types.SpaceView3D.draw_handler_add(draw_view_callback_px, args, 'WINDOW', 'POST_VIEW')
 
             self._timer = context.window_manager.event_timer_add(0.1, window=context.window)
             
