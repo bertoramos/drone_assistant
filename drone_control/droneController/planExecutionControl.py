@@ -18,6 +18,8 @@ class PlanControllerObserver(Observer):
         self.__next_pose_id = -1
         self.__stopped = True
 
+        self.__speed = 0
+
         self.__bearing_color = RGBAColor(1.0, 1.0, 1.0, 1.0)
         self.__path_color = RGBAColor(1.0, 0.0, 1.0, 1.0)
         self.__tracking_color = RGBAColor(1.0, 0.0, 0.0, 1.0)
@@ -65,7 +67,7 @@ class PlanControllerObserver(Observer):
         txt5 = Texto()
         txt5.x = 10
         txt5.y = 20
-        txt5.text = f"Height: {pose.location.z:0.4f} m"
+        txt5.text = f"Height: {pose.location.z:0.4f} m | Speed {self.__speed} m/s"
         txt5.text_color = RGBAColor(1., 1., 1., 1.)
         HUDWriterOperator._textos['PLAN_EXECUTION_INFO_5'] = txt5
 
@@ -156,13 +158,15 @@ class PlanControllerObserver(Observer):
     def stopped(self):
         return self.__stopped
     
-    def notify(self, pose):
+    def notify(self, pose, speed):
         print("notify")
         if self.__stopped:
             return
         
         loc_dist = pose.get_location_distance(self.__next_pose)
         rot_dist = pose.get_rotation_distance(self.__next_pose)
+
+        self.__speed = speed
         
         EPS = 0.1 # bpy.context.scene.TOL
         if loc_dist < EPS and rot_dist < EPS:

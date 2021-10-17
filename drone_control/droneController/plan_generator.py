@@ -5,8 +5,8 @@ import bmesh
 from mathutils import Vector, Euler
 import numpy as np
 
-import networkx as nx
-import networkx.algorithms.approximation.traveling_salesman as tsp
+# import networkx as nx
+# import networkx.algorithms.approximation.traveling_salesman as tsp
 
 from drone_control import sceneModel
 from drone_control.utilsAlgorithm import check_complete_overlap, check_simple_overlap, create_bmesh
@@ -56,6 +56,7 @@ def create_points(context, obj, step_dist=1.):
 
     return xvals, yvals, zvals
 
+"""
 def create_new_plan(X, Y, Z):
     G = nx.Graph()
     points = []
@@ -148,6 +149,8 @@ def create_new_plan(X, Y, Z):
     print("path", path)
     return points
 
+"""
+
 def create_plan(X,Y,Z):
 
     points = []
@@ -168,7 +171,7 @@ def create_plan(X,Y,Z):
     
     rev_j = False
     rev_x = False
-
+    
     # Buscar si es posible optimizar
     opt_points = []
     num = 0

@@ -73,7 +73,7 @@ def draw_view_callback_px(self, context):
     
     bgl.glEnable(bgl.GL_BLEND)
     bgl.glEnable(bgl.GL_LINE_SMOOTH)
-    bgl.glEnable(bgl.GL_DEPTH_TEST)
+    # bgl.glEnable(bgl.GL_DEPTH_TEST)
     
     for k in HUDWriterOperator._curves_3d:
         curve = HUDWriterOperator._curves_3d[k]
@@ -90,7 +90,7 @@ def draw_view_callback_px(self, context):
     bgl.glLineWidth(1)
     bgl.glDisable(bgl.GL_BLEND)
     bgl.glDisable(bgl.GL_LINE_SMOOTH)
-    bgl.glEnable(bgl.GL_DEPTH_TEST)
+    # bgl.glEnable(bgl.GL_DEPTH_TEST)
 
 class HUDWriterOperator(bpy.types.Operator):
     bl_idname = "wm.hudwriter"

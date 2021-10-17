@@ -51,6 +51,7 @@ class ManualSimulationModalOperator(bpy.types.Operator):
         self.__forward = Vector((0, 1, 0))
         self.__right = Vector((1, 0, 0))
         self.__up = Vector((0, 0, 1))
+        self.__speed = 0
     
     def _des_observe_drone(self):
         DroneMovementHandler().stop_plan()
@@ -80,12 +81,12 @@ class ManualSimulationModalOperator(bpy.types.Operator):
         current_pose.location.y += direction * speed * axis.y
         current_pose.location.z += direction * speed * axis.z
         
-        DroneMovementHandler().notifyAll(current_pose)
+        DroneMovementHandler().notifyAll(current_pose, self.__speed)
         return {'RUNNING_MODAL'}
 
     def _apply_rotation(self, keyname):
         angle_step = pi/4
-
+        
         action = {'NUMPAD_4': (+1, self.__up, angle_step, 0, 0), # rotate left
                   'NUMPAD_6': (-1, self.__up, angle_step, 0, 0), # rotate right
                   'NUMPAD_8': (+1, self.__right, 0, angle_step, 0), # rotate up
@@ -120,8 +121,8 @@ class ManualSimulationModalOperator(bpy.types.Operator):
         current_pose.rotation.y = rotation_val.y
         current_pose.rotation.z = rotation_val.z
 
-        DroneMovementHandler().notifyAll(current_pose)
-
+        DroneMovementHandler().notifyAll(current_pose, self.__speed)
+        
         return {'RUNNING_MODAL'}
     
     def modal(self, context, event):

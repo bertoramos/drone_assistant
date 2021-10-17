@@ -1,6 +1,6 @@
 
 import bpy
-from mathutils import Euler
+from mathutils import Euler, Vector
 import logging
 
 from drone_control.communication import Buffer, ConnectionHandler
@@ -17,11 +17,14 @@ class PositioningSystemModalOperator(bpy.types.Operator):
     bl_label = "Positioning System Modal"
 
     isRunning = False
-
+    
     _timer = None
     _observer = None
     _notifier = None
     error_message = ""
+
+    __all_beacons = []
+
 
     def check(self, context):
         return True
@@ -49,6 +52,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
             print("Change mode not finished: Server not available")
             self.report({'INFO'}, 'Server not available')
             ConnectionHandler().stop()
+            handler.stop()
             return False
         else:
             print("Mode changed to 1")
@@ -60,6 +64,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
     def _end_thread(self):
         # PositioningSystemModalOperator._marvelmind_thread.stop()
         # PositioningSystemModalOperator._marvelmind_thread.join()
+        
         if not ConnectionHandler().send_change_mode(0):
             print("Change mode not finished")
         else:
@@ -70,6 +75,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         ConnectionHandler().stop()
     
     def cancel(self, context):
+        print("Cancel")
         self._des_observe_drone()
 
         self._end_thread()
@@ -79,6 +85,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
 
         addr = drone.address
         # beacon = PositioningSystemModalOperator._marvelmind_thread.getBeacon(addr)
+
         beacon = MarvelmindHandler().getBeacon(addr)
 
         x = drone.pose.location.x
@@ -89,9 +96,13 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         rz = drone.pose.rotation.z
 
         last_trace = Buffer().get_last_trace()
+        speed = 0
         
         if beacon is not None:
             x, y, z = beacon.x, beacon.y, beacon.z
+            self.__all_beacons.append(beacon)
+            speed = beacon.speed
+            
         
         if last_trace is not None:
             yaw, pitch, roll = last_trace.yaw, last_trace.pitch, last_trace.roll
@@ -104,13 +115,14 @@ class PositioningSystemModalOperator(bpy.types.Operator):
             rx, ry, rz = init_rotation.x, init_rotation.y, init_rotation.z
 
         pose = sceneModel.Pose(x, y, z, rx, ry, rz)
-        DroneMovementHandler().notifyAll(pose)
+        DroneMovementHandler().notifyAll(pose, speed)
     
     def modal(self, context, event):
         if event.type == "TIMER":
-            
             if not PositioningSystemModalOperator.isRunning:
+                print("To cancel")
                 self.cancel(context)
+                print("Cancelled")
                 return {'FINISHED'}
             
             DroneMovementHandler().autostop()

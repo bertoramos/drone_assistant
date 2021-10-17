@@ -13,13 +13,13 @@ class DroneMovementNotifier(Notifier):
     def detach(self, observer: Observer):
         self.__observers.remove(observer)
 
-    def notifyAll(self, pose):
+    def notifyAll(self, pose, speed):
         for obs in self.__observers:
-            obs.notify(pose)
+            obs.notify(pose, speed)
 
 class DroneControlObserver(Observer):
 
-    def notify(self, pose):
+    def notify(self, pose, speed):
         activeDrone = DronesCollection().getActive()
         if activeDrone is not None:
             activeDrone.translate(pose)

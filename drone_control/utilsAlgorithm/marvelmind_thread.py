@@ -4,6 +4,8 @@ import marvelmind_pylib as mpl
 from dataclasses import dataclass
 from drone_control.patternModel import Singleton, StoppableThread
 
+from mathutils import Vector
+
 import logging
 
 @dataclass
@@ -17,6 +19,8 @@ class Beacon:
     z: float
 
     is_stationary: bool
+
+    speed: float = 0.0
 
 class MarvelmindThread(StoppableThread):
     
@@ -41,14 +45,28 @@ class MarvelmindThread(StoppableThread):
 
         txt = "Get mobile beacon data : "
         for address, xyz in mobile_pos.items():
+            
             current_beacon = Beacon(address,
                                     xyz[3],
                                     xyz[0], xyz[1], xyz[2],
                                     False)
             
+            
+            if address in self.__beacons:
+                prev_beacon = self.__beacons[address]
+                t1 = prev_beacon.timestamp
+                t0 = current_beacon.timestamp
+                timelen = abs(t0 - t1) / 1000.0
+                p1 = Vector((prev_beacon.x, prev_beacon.y, prev_beacon.z))
+                p0 = Vector((current_beacon.x, current_beacon.y, current_beacon.z))
+
+                length = (p0 - p1).length
+
+                if timelen > 0:
+                    current_beacon.speed = length/timelen
+            
             self.__beacons[address] = current_beacon
             txt += "[" + str(address) + " : " + str(xyz) + "] "
-        
         # if len(mobile_pos) > 0: logger.info(txt)
         
         txt = "Get stationary beacon data : "
