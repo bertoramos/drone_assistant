@@ -102,7 +102,6 @@ class PositioningSystemModalOperator(bpy.types.Operator):
             x, y, z = beacon.x, beacon.y, beacon.z
             self.__all_beacons.append(beacon)
             speed = beacon.speed
-            
         
         if last_trace is not None:
             yaw, pitch, roll = last_trace.yaw, last_trace.pitch, last_trace.roll

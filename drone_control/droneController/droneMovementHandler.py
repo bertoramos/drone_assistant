@@ -66,7 +66,7 @@ class DroneMovementHandler(metaclass=Singleton):
         if self._plan_control_observer is not None:
             if self._plan_control_observer.stopped():
                 self.stop_plan()
-
+    
     def isPositioningRunning(self):
         return self._positioning_observer is not None
 

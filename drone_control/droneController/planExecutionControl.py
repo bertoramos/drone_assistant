@@ -5,7 +5,7 @@ from mathutils import Vector
 from drone_control.patternModel.observerModel import Notifier, Observer
 from drone_control.sceneModel import DronesCollection, PlanCollection, DroneModel
 
-from .hudWriter import Curve, HUDWriterOperator, Point3D, Texto, RGBAColor
+from .hudWriter import Arrow, Curve, DashedCurve, HUDWriterOperator, Point3D, Texto, RGBAColor
 
 class PlanControllerObserver(Observer):
 
@@ -22,8 +22,10 @@ class PlanControllerObserver(Observer):
 
         self.__bearing_color = RGBAColor(1.0, 1.0, 1.0, 1.0)
         self.__path_color = RGBAColor(1.0, 0.0, 1.0, 1.0)
-        self.__tracking_color = RGBAColor(1.0, 0.0, 0.0, 1.0)
-        self.__tracking = Curve([], self.__tracking_color)
+        self.__tracking_color = RGBAColor(0.0, 1.0, 1.0, 1.0)
+        self.__tracking = DashedCurve([], self.__tracking_color)
+        self.__tracking.color = self.__tracking_color
+        self.__tracking.scale = 50
     
     def _show_info(self, pose):
         # loc_dist = pose.get_location_distance(self.__next_pose)
@@ -45,21 +47,21 @@ class PlanControllerObserver(Observer):
         txt2 = Texto()
         txt2.x = 10
         txt2.y = 50
-        txt2.text = f"X: {xdist:0.4f} m"
+        txt2.text = f"X: {xdist:0.2f} m"
         txt2.text_color = RGBAColor(248./255., 55./255., 82./255., 1.)
         HUDWriterOperator._textos['PLAN_EXECUTION_INFO_2'] = txt2
 
         txt3 = Texto()
         txt3.x = 150
         txt3.y = 50
-        txt3.text = f"Y: {ydist:0.4f} m"
+        txt3.text = f"Y: {ydist:0.2f} m"
         txt3.text_color = RGBAColor(135./255., 213./255., 18./255., 1.)
         HUDWriterOperator._textos['PLAN_EXECUTION_INFO_3'] = txt3
 
         txt4 = Texto()
         txt4.x = 300
         txt4.y = 50
-        txt4.text = f"Z: {zdist:0.4f} m"
+        txt4.text = f"Z: {zdist:0.2f} m"
         txt4.text_color = RGBAColor(45./255., 140./255., 248./255., 1.)
         HUDWriterOperator._textos['PLAN_EXECUTION_INFO_4'] = txt4
         
@@ -67,7 +69,7 @@ class PlanControllerObserver(Observer):
         txt5 = Texto()
         txt5.x = 10
         txt5.y = 20
-        txt5.text = f"Height: {pose.location.z:0.4f} m | Speed {self.__speed} m/s"
+        txt5.text = f"Height: {pose.location.z:0.2f} m | Speed {self.__speed:0.2f} m/s"
         txt5.text_color = RGBAColor(1., 1., 1., 1.)
         HUDWriterOperator._textos['PLAN_EXECUTION_INFO_5'] = txt5
 
@@ -84,7 +86,7 @@ class PlanControllerObserver(Observer):
         HUDWriterOperator._curves_3d['PATH'] = path_curve
 
         # Tracking
-        HUDWriterOperator._curves_3d['TRACKING'] = self.__tracking
+        HUDWriterOperator._dashed_curve_3d['TRACKING'] = self.__tracking
 
         # Bearing
         if len(self.__tracking.points) >= 2:
@@ -94,9 +96,10 @@ class PlanControllerObserver(Observer):
             Q = Vector((Q.x, Q.y, Q.z))
             v = (Q-P).normalized()
             
-            R = P - 0.5*v
-
-            HUDWriterOperator._curves_3d['BEARING'] = Curve([Point3D(P.x, P.y, P.z), Point3D(R.x, R.y, R.z)], self.__bearing_color)
+            R = P - 0.25*v
+            
+            arrow = Arrow(Point3D(P.x, P.y, P.z), Point3D(R.x, R.y, R.z), head_len=0.05, head_size=0.02, color=self.__bearing_color)
+            HUDWriterOperator._arrows_3d['BEARING'] = arrow
 
         self.__current_plan.highlight(self.__next_pose_id)
     
@@ -119,11 +122,11 @@ class PlanControllerObserver(Observer):
         if 'PATH' in HUDWriterOperator._curves_3d:
             del HUDWriterOperator._curves_3d['PATH']
         
-        if 'TRACKING' in HUDWriterOperator._curves_3d:
-            del HUDWriterOperator._curves_3d['TRACKING']
+        if 'TRACKING' in HUDWriterOperator._dashed_curve_3d:
+            del HUDWriterOperator._dashed_curve_3d['TRACKING']
         
-        if 'BEARING' in HUDWriterOperator._curves_3d:
-            del HUDWriterOperator._curves_3d['BEARING']
+        if 'BEARING' in HUDWriterOperator._arrows_3d:
+            del HUDWriterOperator._arrows_3d['BEARING']
         
         self.__current_plan.no_highlight()
 
@@ -176,7 +179,7 @@ class PlanControllerObserver(Observer):
                 self.__prev_pose = self.__current_plan.getPose(self.__prev_pose_id)
                 self.__next_pose = self.__current_plan.getPose(self.__next_pose_id)
 
-                self.__tracking = Curve([], self.__tracking_color)
+                self.__tracking.points.clear()
                 print("New pose")
                 self._show_info(pose)
             else:
