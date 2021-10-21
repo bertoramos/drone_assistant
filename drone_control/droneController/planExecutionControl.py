@@ -26,6 +26,8 @@ class PlanControllerObserver(Observer):
         self.__tracking = DashedCurve([], self.__tracking_color)
         self.__tracking.color = self.__tracking_color
         self.__tracking.scale = 50
+
+        self.__is_show_current_level_active = False
     
     def _show_info(self, pose):
         # loc_dist = pose.get_location_distance(self.__next_pose)
@@ -102,6 +104,16 @@ class PlanControllerObserver(Observer):
             HUDWriterOperator._arrows_3d['BEARING'] = arrow
 
         self.__current_plan.highlight(self.__next_pose_id)
+
+        # Show current level if this mode is active
+        #if self.__is_show_current_level_active:
+        #    poses_id = set(self.__get_current_level())
+        #    poses_to_hide = {e for e in self.__current_plan} - poses_id
+        #    for pidx in poses_to_hide:
+        #        self.__current_plan.hide_pose(pidx)
+        #else:
+        #    for pidx in self.__current_plan:
+        #        self.__current_plan.show_pose(pidx)
     
     def _clear_info(self):
         if 'PLAN_EXECUTION_INFO_1' in HUDWriterOperator._textos:
@@ -129,6 +141,13 @@ class PlanControllerObserver(Observer):
             del HUDWriterOperator._arrows_3d['BEARING']
         
         self.__current_plan.no_highlight()
+    
+    def show_mode(self, mode):
+        self.__show_mode = mode
+    
+    def __get_current_level(self):
+        # TODO: buscar todos los puntos a la misma altura
+        return []
 
     def start(self):
         if not self.__stopped:

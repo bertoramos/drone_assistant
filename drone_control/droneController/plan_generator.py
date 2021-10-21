@@ -25,7 +25,7 @@ def create_bmesh(obj):
     bm = bmesh.new()
     bm.from_mesh(tmp.data)
     bm.transform(tmp.matrix_world)
-
+    
     bpy.data.objects.remove(tmp, do_unlink=True)
     bm.faces.ensure_lookup_table()
     bm.verts.ensure_lookup_table()

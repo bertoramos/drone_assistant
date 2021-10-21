@@ -75,4 +75,7 @@ class DroneMovementHandler(metaclass=Singleton):
             return not self._plan_control_observer.stopped()
         else:
             return False
-
+    
+    def show_current_level_mode(self, mode):
+        self._plan_control_observer.show_current_level_mode(mode)
+    

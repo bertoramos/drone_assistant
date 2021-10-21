@@ -12,7 +12,7 @@ class DroneMovementNotifier(Notifier):
 
     def detach(self, observer: Observer):
         self.__observers.remove(observer)
-
+    
     def notifyAll(self, pose, speed):
         for obs in self.__observers:
             obs.notify(pose, speed)

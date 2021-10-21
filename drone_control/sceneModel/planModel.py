@@ -241,6 +241,11 @@ def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_nu
     return cursor_name
 """
 
+def get_level_percentage(level, step):
+    f = lambda x: step*(1-x) + 1 # -step*x + 1 + step
+    g = lambda x: x if x > 0 else 0
+    return g(f(level))
+
 class PlanModel:
 
     def __init__(self, planID, droneID):
@@ -271,13 +276,33 @@ class PlanModel:
     
     def highlight(self, poseIndex: int):
         self.no_highlight()
-        obj = bpy.data.objects[self.__plan_meshes[poseIndex]]
-        self.__change_color(obj)
+
+        for level, idx in enumerate(range(poseIndex, len(self.__plan)), 1):
+            obj = bpy.data.objects[self.__plan_meshes[idx]]
+            hc = list(self.__highlight_color)
+            hc[3] = hc[3]*get_level_percentage(level, 0.2)
+            self.__change_color(obj, tuple(hc))
     
     def no_highlight(self):
         for obj_name in self.__plan_meshes:
             obj = bpy.data.objects[obj_name]
             self.__set_original_color(obj)
+    
+    def hide_pose(self, poseIndex: int):
+        plan_mesh_name = self.__plan_meshes[poseIndex]
+        if plan_mesh_name in bpy.data.objects:
+            obj = bpy.data.objects[plan_mesh_name]
+            obj.hide_set(True)
+            for o in obj.children:
+                o.hide_set(True)
+    
+    def show_pose(self, poseIndex: int):
+        plan_mesh_name = self.__plan_meshes[poseIndex]
+        if plan_mesh_name in bpy.data.objects:
+            obj = bpy.data.objects[plan_mesh_name]
+            obj.hide_set(False)
+            for o in obj.children:
+                o.hide_set(False)
     
     def draw(self):
         drone = DronesCollection().get(self.__droneID)
@@ -314,14 +339,14 @@ class PlanModel:
 
     ### VIEW
 
-    def __change_color(self, obj):
+    def __change_color(self, obj, color):
         mat = obj.active_material
         if mat is None:
             mat = bpy.data.materials.new(obj.name_full + "_mat")
             obj.active_material = mat
         if obj.name_full not in self.__original_color:
             self.__original_color[obj.name_full] = mat.diffuse_color[:]
-        mat.diffuse_color = self.__highlight_color
+        mat.diffuse_color = color
     
     def __set_original_color(self, obj):
         mat = obj.active_material
