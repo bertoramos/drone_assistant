@@ -7,6 +7,23 @@ from drone_control.sceneModel import DronesCollection, PlanCollection, DroneMode
 
 from .hudWriter import Arrow, Curve, DashedCurve, HUDWriterOperator, Point3D, Texto, RGBAColor
 
+
+class NPOSESModeArgs(bpy.types.PropertyGroup):
+    nposes: bpy.props.IntProperty(name="nposes", default=4, min=1)
+
+def register():
+    items = [("ALL", "All", "", 0),
+             ("LEVEL", "Level", "", 1),
+             ("NPOSES", "Nposes", "", 2),
+            ]
+
+    bpy.types.Scene.plan_show_mode = bpy.props.EnumProperty(items=items, default="ALL")
+    
+    bpy.types.Scene.NPOSES_args = bpy.props.PointerProperty(type=NPOSESModeArgs)
+
+def unregister():
+    del bpy.types.Scene.plan_show_mode
+
 class PlanControllerObserver(Observer):
 
     def __init__(self):
@@ -26,8 +43,6 @@ class PlanControllerObserver(Observer):
         self.__tracking = DashedCurve([], self.__tracking_color)
         self.__tracking.color = self.__tracking_color
         self.__tracking.scale = 50
-
-        self.__is_show_current_level_active = False
     
     def _show_info(self, pose):
         # loc_dist = pose.get_location_distance(self.__next_pose)
@@ -105,6 +120,8 @@ class PlanControllerObserver(Observer):
 
         self.__current_plan.highlight(self.__next_pose_id)
 
+        self.__apply_show_plan_mode()
+
         # Show current level if this mode is active
         #if self.__is_show_current_level_active:
         #    poses_id = set(self.__get_current_level())
@@ -141,13 +158,22 @@ class PlanControllerObserver(Observer):
             del HUDWriterOperator._arrows_3d['BEARING']
         
         self.__current_plan.no_highlight()
-    
-    def show_mode(self, mode):
-        self.__show_mode = mode
+
+        bpy.context.scene.plan_show_mode = "ALL"
+        self.__apply_show_plan_mode()
     
     def __get_current_level(self):
         # TODO: buscar todos los puntos a la misma altura
         return []
+    
+    def __apply_show_plan_mode(self):
+        mode = bpy.context.scene.plan_show_mode
+
+        action = {'ALL': lambda: None,
+                  'LEVEL': lambda: None,
+                  'NPOSES': lambda: None}
+
+        action[mode]()
 
     def start(self):
         if not self.__stopped:
