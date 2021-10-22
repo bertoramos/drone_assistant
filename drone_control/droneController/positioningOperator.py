@@ -155,7 +155,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
 
         wm = context.window_manager
         wm.modal_handler_add(self)
-        self._timer = wm.event_timer_add(0.1, window=context.window)
+        self._timer = wm.event_timer_add(0.01, window=context.window)
         
         PositioningSystemModalOperator.error_message = ""
 

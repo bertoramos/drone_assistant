@@ -81,9 +81,9 @@ def _load_drone_mesh(name, start_location, start_rotation, dimension):
     sphere_id = sphere_obj.name_full
     sphere_obj.object_type = "DRONE"
     base_dim = 0.2
-    xdim = 0.9*dimension.x if dimension.x < base_dim else base_dim
-    ydim = 0.9*dimension.y if dimension.y < base_dim else base_dim
-    zdim = 0.9*dimension.z if dimension.z < base_dim else base_dim
+    xdim = 0.9 * dimension.x if dimension.x < base_dim else base_dim
+    ydim = 0.9 * dimension.y if dimension.y < base_dim else base_dim
+    zdim = 0.9 * dimension.z if dimension.z < base_dim else base_dim
 
     bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=(0, 0, 0), scale=(1, 1, 1))
     orientation_id = name + "_orientation"

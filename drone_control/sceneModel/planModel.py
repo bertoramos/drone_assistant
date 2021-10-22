@@ -280,7 +280,7 @@ class PlanModel:
         for level, idx in enumerate(range(poseIndex, len(self.__plan)), 1):
             obj = bpy.data.objects[self.__plan_meshes[idx]]
             hc = list(self.__highlight_color)
-            hc[3] = hc[3]*get_level_percentage(level, 0.2)
+            hc[3] = hc[3]*get_level_percentage(level, 0.4)
             self.__change_color(obj, tuple(hc))
     
     def no_highlight(self):
@@ -288,21 +288,37 @@ class PlanModel:
             obj = bpy.data.objects[obj_name]
             self.__set_original_color(obj)
     
+    def __hide_obj_children(self, obj):
+        if len(obj.children) > 0:
+            for o in obj.children:
+                self.__hide_obj_children(o)
+        obj.hide_set(True)
+    
+    def __show_obj_children(self, obj):
+        if len(obj.children) > 0:
+            for o in obj.children:
+                self.__show_obj_children(o)
+        if obj.object_type != "ROBOT_MARGIN":
+            obj.hide_set(False)
+        else:
+            # TODO: show only if robot_margin is not Hidden
+            if not bpy.context.scene.robot_margin_hidden:
+                obj.hide_set(False)
+
     def hide_pose(self, poseIndex: int):
         plan_mesh_name = self.__plan_meshes[poseIndex]
         if plan_mesh_name in bpy.data.objects:
             obj = bpy.data.objects[plan_mesh_name]
             obj.hide_set(True)
-            for o in obj.children:
-                o.hide_set(True)
+            self.__hide_obj_children(obj)
     
     def show_pose(self, poseIndex: int):
         plan_mesh_name = self.__plan_meshes[poseIndex]
         if plan_mesh_name in bpy.data.objects:
             obj = bpy.data.objects[plan_mesh_name]
-            obj.hide_set(False)
-            for o in obj.children:
-                o.hide_set(False)
+            if obj.hide_get():
+                obj.hide_set(False)
+                self.__show_obj_children(obj)
     
     def draw(self):
         drone = DronesCollection().get(self.__droneID)

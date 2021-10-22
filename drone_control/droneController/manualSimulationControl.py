@@ -52,6 +52,8 @@ class ManualSimulationModalOperator(bpy.types.Operator):
         self.__right = Vector((1, 0, 0))
         self.__up = Vector((0, 0, 1))
         self.__speed = 0
+
+        self.__current_pose = sceneModel.dronesCollection.DronesCollection().getActive().pose
     
     def _des_observe_drone(self):
         DroneMovementHandler().stop_plan()
@@ -81,7 +83,9 @@ class ManualSimulationModalOperator(bpy.types.Operator):
         current_pose.location.y += direction * speed * axis.y
         current_pose.location.z += direction * speed * axis.z
         
-        DroneMovementHandler().notifyAll(current_pose, self.__speed)
+        self.__current_pose = current_pose
+
+        #DroneMovementHandler().notifyAll(current_pose, self.__speed)
         return {'RUNNING_MODAL'}
 
     def _apply_rotation(self, keyname):
@@ -121,7 +125,9 @@ class ManualSimulationModalOperator(bpy.types.Operator):
         current_pose.rotation.y = rotation_val.y
         current_pose.rotation.z = rotation_val.z
 
-        DroneMovementHandler().notifyAll(current_pose, self.__speed)
+        self.__current_pose = current_pose
+
+        #DroneMovementHandler().notifyAll(current_pose, self.__speed)
         
         return {'RUNNING_MODAL'}
     
@@ -137,6 +143,7 @@ class ManualSimulationModalOperator(bpy.types.Operator):
                 return rescode
         
         if event.type == "TIMER":
+            DroneMovementHandler().notifyAll(self.__current_pose, self.__speed)
             DroneMovementHandler().autostop()
         
         return {'PASS_THROUGH'}
@@ -146,7 +153,7 @@ class ManualSimulationModalOperator(bpy.types.Operator):
         # Genera Notifier y observer
         self._observe_drone()
         wm = context.window_manager
-        self._timer = wm.event_timer_add(0.1, window=context.window)
+        self._timer = wm.event_timer_add(0.01, window=context.window)
         wm.modal_handler_add(self)
         ManualSimulationModalOperator.isRunning = True
 

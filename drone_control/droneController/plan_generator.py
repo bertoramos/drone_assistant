@@ -330,7 +330,7 @@ class PlanGeneratorModalOperator(bpy.types.Operator):
         area_scale = bpy.data.objects[self.obj_name].scale.copy()
         area_dim = bpy.data.objects[self.obj_name].dimensions.copy()
         
-        drone = sceneModel.DronesCollection().activeDrone
+        drone = sceneModel.DronesCollection().get(self.drone_name)
         self.dim = bpy.data.objects[drone.colliderID].dimensions.copy()
         
         self.move_margin(area_location, area_scale, area_dim)
@@ -380,7 +380,7 @@ class PlanGeneratorModalOperator(bpy.types.Operator):
     
     @classmethod
     def poll(cls, context):
-        return context.area.type == "VIEW_3D" and sceneModel.DronesCollection().activeDrone is not None
+        return context.area.type == "VIEW_3D" and len(sceneModel.DronesCollection()) > 0
     
     def modal(self, context, event):
         if event.type == "SPACE":

@@ -66,6 +66,13 @@ class Arrow:
     head_size: float
     color  : RGBAColor = RGBAColor(0, 0, 0, 1)
 
+@dataclass
+class Star:
+    point: Point3D
+    size: float
+
+    color: RGBAColor = RGBAColor(1, 1, 0, 1)
+
 #######################################################
 
 def get_fixed_perpendicular(u):
@@ -192,6 +199,22 @@ def __draw_dotted_curve_3d(curve):
     shader.uniform_float("u_color", color)
     batch.draw(shader)
 
+def __draw_star(star):
+    size = star.size / 2
+    pos = Vector((star.point.x, star.point.y, star.point.z))
+    color = star.color
+
+    curves = [0]*5
+    curves[0] = Curve([Point3D(pos.x - size, pos.y, pos.z), Point3D(pos.x + size, pos.y, pos.z)], color)
+    curves[1] = Curve([Point3D(pos.x, pos.y - size, pos.z), Point3D(pos.x, pos.y + size, pos.z)], color)
+    curves[2] = Curve([Point3D(pos.x, pos.y, pos.z - size), Point3D(pos.x, pos.y, pos.z + size)], color)
+
+    curves[3] = Curve([Point3D(pos.x - size, pos.y - size, pos.z), Point3D(pos.x + size, pos.y + size, pos.z)], color)
+    curves[4] = Curve([Point3D(pos.x - size, pos.y + size, pos.z), Point3D(pos.x + size, pos.y - size, pos.z)], color)
+
+    for c in curves:
+        __draw_curve_3d(c)
+
 ############################################################################
 
 def draw_callback_px(self, context):
@@ -226,6 +249,10 @@ def draw_view_callback_px(self, context):
         arrow = HUDWriterOperator._arrows_3d[k]
         __draw_arrow_3d(arrow)
     
+    for k in HUDWriterOperator._star_3d:
+        star = HUDWriterOperator._star_3d[k]
+        __draw_star(star)
+    
     bgl.glLineWidth(1)
     bgl.glDisable(bgl.GL_BLEND)
     bgl.glDisable(bgl.GL_LINE_SMOOTH)
@@ -244,6 +271,7 @@ class HUDWriterOperator(bpy.types.Operator):
     _curves_3d = {}
     _dashed_curve_3d = {}
     _arrows_3d = {}
+    _star_3d = {}
 
     def redraw(self, context):
         #context.area.tag_redraw()

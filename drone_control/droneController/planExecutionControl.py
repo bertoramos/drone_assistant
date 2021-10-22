@@ -1,30 +1,36 @@
 
 import bpy
 from mathutils import Vector
+import math
 
 from drone_control.patternModel.observerModel import Notifier, Observer
 from drone_control.sceneModel import DronesCollection, PlanCollection, DroneModel
 
-from .hudWriter import Arrow, Curve, DashedCurve, HUDWriterOperator, Point3D, Texto, RGBAColor
+from .hudWriter import Arrow, Curve, DashedCurve, HUDWriterOperator, Point3D, Star, Texto, RGBAColor
 
+def update_func(self, context):
+    PlanControllerObserver.show_mode_changed = True #.__apply_show_plan_mode()
 
 class NPOSESModeArgs(bpy.types.PropertyGroup):
-    nposes: bpy.props.IntProperty(name="nposes", default=4, min=1)
+    nposes: bpy.props.IntProperty(name="nposes", default=4, min=1, update=update_func)
 
 def register():
     items = [("ALL", "All", "", 0),
              ("LEVEL", "Level", "", 1),
-             ("NPOSES", "Nposes", "", 2),
+             ("NPOSES", "N poses", "", 2),
             ]
 
-    bpy.types.Scene.plan_show_mode = bpy.props.EnumProperty(items=items, default="ALL")
+    bpy.types.Scene.plan_show_mode = bpy.props.EnumProperty(items=items, default="ALL", update=update_func)
     
     bpy.types.Scene.NPOSES_args = bpy.props.PointerProperty(type=NPOSESModeArgs)
 
 def unregister():
     del bpy.types.Scene.plan_show_mode
+    del bpy.types.Scene.NPOSES_args
 
 class PlanControllerObserver(Observer):
+
+    show_mode_changed = True
 
     def __init__(self):
         self.__current_plan = None
@@ -43,7 +49,9 @@ class PlanControllerObserver(Observer):
         self.__tracking = DashedCurve([], self.__tracking_color)
         self.__tracking.color = self.__tracking_color
         self.__tracking.scale = 50
-    
+
+        self.__any_hidden = False
+
     def _show_info(self, pose):
         # loc_dist = pose.get_location_distance(self.__next_pose)
         # rot_dist = pose.get_rotation_distance(self.__next_pose)
@@ -103,7 +111,8 @@ class PlanControllerObserver(Observer):
         HUDWriterOperator._curves_3d['PATH'] = path_curve
 
         # Tracking
-        HUDWriterOperator._dashed_curve_3d['TRACKING'] = self.__tracking
+        if len(self.__tracking.points) >= 2:
+            HUDWriterOperator._dashed_curve_3d['TRACKING'] = self.__tracking
 
         # Bearing
         if len(self.__tracking.points) >= 2:
@@ -117,10 +126,14 @@ class PlanControllerObserver(Observer):
             
             arrow = Arrow(Point3D(P.x, P.y, P.z), Point3D(R.x, R.y, R.z), head_len=0.05, head_size=0.02, color=self.__bearing_color)
             HUDWriterOperator._arrows_3d['BEARING'] = arrow
+        else:
+            if 'BEARING' in HUDWriterOperator._arrows_3d:
+                del HUDWriterOperator._arrows_3d['BEARING']
+        
+        # Drone position draw
+        HUDWriterOperator._star_3d['STAR_DRONE_POSITION'] = Star(Point3D(pose.location.x, pose.location.y, pose.location.z), 0.1)
 
         self.__current_plan.highlight(self.__next_pose_id)
-
-        self.__apply_show_plan_mode()
 
         # Show current level if this mode is active
         #if self.__is_show_current_level_active:
@@ -157,28 +170,78 @@ class PlanControllerObserver(Observer):
         if 'BEARING' in HUDWriterOperator._arrows_3d:
             del HUDWriterOperator._arrows_3d['BEARING']
         
+        if 'STAR_DRONE_POSITION' in HUDWriterOperator._star_3d:
+            del HUDWriterOperator._star_3d['STAR_DRONE_POSITION']
+        
         self.__current_plan.no_highlight()
 
         bpy.context.scene.plan_show_mode = "ALL"
         self.__apply_show_plan_mode()
     
-    def __get_current_level(self):
-        # TODO: buscar todos los puntos a la misma altura
-        return []
+    def __show_all_poses(self):
+        if self.__current_plan is not None:
+            if self.__any_hidden:
+                plan_len = len(list(iter(self.__current_plan)))
+                for i in range(plan_len):
+                    self.__current_plan.show_pose(i)
+    
+    def __show_n_poses(self):
+
+        if self.__current_plan is not None:
+            plan_len = len(list(iter(self.__current_plan)))
+            nposes = bpy.context.scene.NPOSES_args.nposes + 1
+            nposes = nposes if nposes < plan_len else plan_len
+            
+            rng = None
+            if self.__prev_pose_id >= 0:
+                nposes = nposes if plan_len - self.__prev_pose_id > nposes else plan_len - self.__prev_pose_id
+                rng = range(self.__prev_pose_id, self.__prev_pose_id + nposes)
+            else:
+                nposes = nposes if plan_len > nposes else plan_len 
+                rng = range(nposes)
+            
+            plan_hide_points = set(range(plan_len)) - set(rng)
+            for i in plan_hide_points:
+                self.__current_plan.hide_pose(i)
+            
+            for i in rng:
+                self.__current_plan.show_pose(i)
+            self.__any_hidden = True
+    
+    def __show_current_level(self):
+        if self.__current_plan is not None:
+            pose = self.__current_plan.getPose(self.__next_pose_id)
+            height = pose.location.z
+            plan_len = len(list(iter(self.__current_plan)))
+
+            level_points = []
+            for i in range(plan_len):
+                if abs(self.__current_plan.getPose(i).location.z - height) < bpy.context.scene.TOL:
+                    level_points.append(i)
+            
+            hide_points = set(range(plan_len)) - set(level_points) - { self.__prev_pose_id }
+            show_points = set(range(plan_len)) - hide_points
+            for i in hide_points:
+                self.__current_plan.hide_pose(i)
+            for i in show_points:
+                self.__current_plan.show_pose(i)
+            
+            self.__any_hidden = True
     
     def __apply_show_plan_mode(self):
         mode = bpy.context.scene.plan_show_mode
 
-        action = {'ALL': lambda: None,
-                  'LEVEL': lambda: None,
-                  'NPOSES': lambda: None}
+        action = {'ALL': self.__show_all_poses,
+                  'LEVEL': self.__show_current_level,
+                  'NPOSES': self.__show_n_poses
+                  }
 
         action[mode]()
-
+    
     def start(self):
         if not self.__stopped:
             return
-
+        
         self.__current_plan = PlanCollection().getActive()
         
         if self.__current_plan is None:
@@ -197,6 +260,7 @@ class PlanControllerObserver(Observer):
         print("START PLAN EXECUTION")
 
         self._show_info(DronesCollection().getActive().pose)
+        self.__apply_show_plan_mode()
     
     def stop(self):
         self.__stopped = True
@@ -227,13 +291,26 @@ class PlanControllerObserver(Observer):
                 self.__tracking.points.clear()
                 print("New pose")
                 self._show_info(pose)
+
+                self.__apply_show_plan_mode()
             else:
+                self.__apply_show_plan_mode()
                 self._clear_info()
                 self.stop()
                 return
         else:
-            p = Point3D(pose.location.x, pose.location.y, pose.location.z)
-            self.__tracking.points.append(p)
+            if len(self.__tracking.points) >= 1:
+                last_point = self.__tracking.points[-1]
+                if math.dist((pose.location.x, pose.location.y, pose.location.z), (last_point.x, last_point.y, last_point.z)) > 0:
+                    p = Point3D(pose.location.x, pose.location.y, pose.location.z)
+                    self.__tracking.points.append(p)
+            else:
+                p = Point3D(pose.location.x, pose.location.y, pose.location.z)
+                self.__tracking.points.append(p)
             self._show_info(pose)
 
             print(f"next_pose={self.__next_pose} {loc_dist = :0.4f} meters and {rot_dist = :0.4f} degrees")
+
+            if PlanControllerObserver.show_mode_changed:
+                self.__apply_show_plan_mode()
+                PlanControllerObserver.show_mode_changed = False
