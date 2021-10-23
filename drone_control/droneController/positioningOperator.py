@@ -45,7 +45,11 @@ class PositioningSystemModalOperator(bpy.types.Operator):
     def _begin_thread(self, dev, clientAddr, serverAddr):
         handler = MarvelmindHandler()
         handler.start(device=dev, verbose=True)
-        ConnectionHandler().initialize(clientAddr, serverAddr)
+
+        if not ConnectionHandler().initialize(clientAddr, serverAddr):
+            print("Client socket cannot be open")
+            handler.stop()
+            return False
         ConnectionHandler().start()
 
         if not ConnectionHandler().send_change_mode(1):
@@ -119,9 +123,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
     def modal(self, context, event):
         if event.type == "TIMER":
             if not PositioningSystemModalOperator.isRunning:
-                print("To cancel")
                 self.cancel(context)
-                print("Cancelled")
                 return {'FINISHED'}
             
             DroneMovementHandler().autostop()
@@ -155,7 +157,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
 
         wm = context.window_manager
         wm.modal_handler_add(self)
-        self._timer = wm.event_timer_add(0.01, window=context.window)
+        self._timer = wm.event_timer_add(0.1, window=context.window)
         
         PositioningSystemModalOperator.error_message = ""
 

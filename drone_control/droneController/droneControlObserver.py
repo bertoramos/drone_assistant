@@ -22,4 +22,5 @@ class DroneControlObserver(Observer):
     def notify(self, pose, speed):
         activeDrone = DronesCollection().getActive()
         if activeDrone is not None:
+            # TODO: Apply only if pose changed
             activeDrone.translate(pose)

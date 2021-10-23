@@ -64,11 +64,7 @@ class UDPServer(StoppableThread):
 
         self.__client_socket = None
 
-        try:
-            self.__open_socket()
-        except Exception as e:
-            print(e)
-            return
+        self.__open_socket()    
     
     def __open_socket(self):
         self.__client_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
@@ -139,9 +135,13 @@ class ConnectionHandler(metaclass=Singleton):
         self.__clientAddr = None
     
     def initialize(self, clientAddr, serverAddr):
-        self.__serverAddr = serverAddr
-        self.__clientAddr = clientAddr
-        self.__thread = UDPServer(serverAddr=self.__serverAddr, clientAddr=self.__clientAddr)
+        try:
+            self.__serverAddr = serverAddr
+            self.__clientAddr = clientAddr
+            self.__thread = UDPServer(serverAddr=self.__serverAddr, clientAddr=self.__clientAddr)
+        except Exception as ex:
+            return False
+        return True
     
     def start(self):
         if self.__thread is not None:

@@ -271,7 +271,7 @@ class PlanControllerObserver(Observer):
         return self.__stopped
     
     def notify(self, pose, speed):
-        print("notify")
+        # print("notify")
         if self.__stopped:
             return
         
@@ -289,7 +289,7 @@ class PlanControllerObserver(Observer):
                 self.__next_pose = self.__current_plan.getPose(self.__next_pose_id)
 
                 self.__tracking.points.clear()
-                print("New pose")
+                # print("New pose")
                 self._show_info(pose)
 
                 self.__apply_show_plan_mode()
@@ -309,7 +309,7 @@ class PlanControllerObserver(Observer):
                 self.__tracking.points.append(p)
             self._show_info(pose)
 
-            print(f"next_pose={self.__next_pose} {loc_dist = :0.4f} meters and {rot_dist = :0.4f} degrees")
+            # print(f"next_pose={self.__next_pose} {loc_dist = :0.4f} meters and {rot_dist = :0.4f} degrees")
 
             if PlanControllerObserver.show_mode_changed:
                 self.__apply_show_plan_mode()
