@@ -194,7 +194,6 @@ def create_plan(X,Y,Z):
 class PlanGeneratorModalOperator(bpy.types.Operator):
     bl_idname = "scene.plan_generator_modal"
     bl_label = "Plan Generator"
-
     
     _collisionable_objects = {'WALL', 'OBSTACLE', 'CEIL'}
     _need_to_clone = {'WALL', 'OBSTACLE'}
@@ -390,7 +389,6 @@ class PlanGeneratorModalOperator(bpy.types.Operator):
                not PlanGeneratorModalOperator.isRunning
     
     def modal(self, context, event):
-
         if event.type == "ESC":
             bpy.data.objects.remove(bpy.data.objects[self.obj_name])
             bpy.data.objects.remove(bpy.data.objects[self.collider_name])

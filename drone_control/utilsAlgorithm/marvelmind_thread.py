@@ -4,6 +4,8 @@ import marvelmind_pylib as mpl
 from dataclasses import dataclass
 from drone_control.patternModel import Singleton, StoppableThread
 
+from .fps_counter import FPSCounter
+
 from mathutils import Vector
 
 import logging
@@ -41,6 +43,7 @@ class MarvelmindThread(StoppableThread):
         logger = logging.getLogger("myblenderlog")
         
         mobile_pos = self.__dev.getMobileBeaconsPosition()
+        #FPSCounter().notifyPosition()
         stationary_pos = self.__dev.getStationaryBeaconsPosition()
 
         txt = "Get mobile beacon data : "
