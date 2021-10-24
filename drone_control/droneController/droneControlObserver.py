@@ -22,5 +22,12 @@ class DroneControlObserver(Observer):
     def notify(self, pose, speed):
         activeDrone = DronesCollection().getActive()
         if activeDrone is not None:
-            # TODO: Apply only if pose changed
-            activeDrone.translate(pose)
+            loc_dist = pose.get_location_distance(activeDrone.pose)
+            #rot_dist = pose.get_rotation_distance(activeDrone.pose)
+            rx_dif = abs(pose.rotation.x - activeDrone.pose.rotation.x)
+            ry_dif = abs(pose.rotation.y - activeDrone.pose.rotation.y)
+            rz_dif = abs(pose.rotation.z - activeDrone.pose.rotation.z)
+
+            EPS = 0.01
+            if loc_dist > EPS or rx_dif > EPS or ry_dif > EPS or rz_dif > EPS:
+                activeDrone.translate(pose)

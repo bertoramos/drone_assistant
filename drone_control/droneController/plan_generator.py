@@ -10,6 +10,7 @@ import numpy as np
 
 from drone_control import sceneModel
 from drone_control.utilsAlgorithm import check_complete_overlap, check_simple_overlap, create_bmesh
+from .planCreator import PlanEditor
 
 
 def create_bmesh(obj):
@@ -205,6 +206,8 @@ class PlanGeneratorModalOperator(bpy.types.Operator):
     _original_color = None
     _alert_color = (1., 0., 0., 1.)
 
+    isRunning = False
+
     def _change_color(cls, obj):
         mat = obj.active_material
         if mat is None:
@@ -380,9 +383,21 @@ class PlanGeneratorModalOperator(bpy.types.Operator):
     
     @classmethod
     def poll(cls, context):
-        return context.area.type == "VIEW_3D" and len(sceneModel.DronesCollection()) > 0
+        return context.area.type == "VIEW_3D" and \
+               len(sceneModel.DronesCollection()) > 0 and \
+               sceneModel.PlanCollection().getActive() is None and \
+               not PlanEditor().isActive and \
+               not PlanGeneratorModalOperator.isRunning
     
     def modal(self, context, event):
+
+        if event.type == "ESC":
+            bpy.data.objects.remove(bpy.data.objects[self.obj_name])
+            bpy.data.objects.remove(bpy.data.objects[self.collider_name])
+
+            PlanGeneratorModalOperator.isRunning = False
+            return {'FINISHED'}
+
         if event.type == "SPACE":
             # create_plan(self, context, GeneratorModalOperator.obj)
             # bpy.data.objects.remove(GeneratorModalOperator.obj)
@@ -415,6 +430,8 @@ class PlanGeneratorModalOperator(bpy.types.Operator):
 
             bpy.data.objects.remove(bpy.data.objects[self.obj_name])
             bpy.data.objects.remove(bpy.data.objects[self.collider_name])
+
+            PlanGeneratorModalOperator.isRunning = False
             return {'FINISHED'}
         
         if event.type == 'TIMER':
@@ -445,6 +462,8 @@ class PlanGeneratorModalOperator(bpy.types.Operator):
             #logger = logging.getLogger("myblenderlog")
             #logger.info(f"Given plan name is in use")
 
+            PlanGeneratorModalOperator.isRunning = False
+
             return {'FINISHED'}
 
         if self.new_plan_name == "":
@@ -453,6 +472,8 @@ class PlanGeneratorModalOperator(bpy.types.Operator):
             #logger = logging.getLogger("myblenderlog")
             #logger.info(f"Given plan name is empty")
 
+            PlanGeneratorModalOperator.isRunning = False
+
             return {'FINISHED'}
 
         self.create_area(context)
@@ -460,6 +481,8 @@ class PlanGeneratorModalOperator(bpy.types.Operator):
         wm = context.window_manager
         self._timer = wm.event_timer_add(0.1, window=context.window)
         context.window_manager.modal_handler_add(self)
+
+        PlanGeneratorModalOperator.isRunning = True
 
         return {'RUNNING_MODAL'}
 

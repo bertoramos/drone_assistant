@@ -281,7 +281,7 @@ class PlanControllerObserver(Observer):
         self.__speed = speed
         
         EPS = 0.1 # bpy.context.scene.TOL
-        if loc_dist < EPS and rot_dist < EPS:
+        if loc_dist < EPS and rot_dist.x < EPS and rot_dist.y < EPS and rot_dist.z < EPS:
             if self.__next_pose_id + 1 < len(list(iter(self.__current_plan))):
                 self.__prev_pose_id += 1
                 self.__next_pose_id += 1

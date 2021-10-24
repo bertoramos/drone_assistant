@@ -82,9 +82,12 @@ class CreatePlanEditorOperator(bpy.types.Operator):
     
     @classmethod
     def poll(cls, context):
+        from .plan_generator import PlanGeneratorModalOperator
+
         return not PlanEditor().isActive and \
                sceneModel.PlanCollection().getActive() is None and \
-               len(sceneModel.DronesCollection()) > 0
+               len(sceneModel.DronesCollection()) > 0 and \
+               not PlanGeneratorModalOperator.isRunning
 
     def invoke(self, context, event):
         wm = context.window_manager
