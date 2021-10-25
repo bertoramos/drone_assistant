@@ -11,6 +11,8 @@ from .droneMovementHandler import DroneMovementHandler
 
 from drone_control.communication import datapacket
 
+from drone_control.utilsAlgorithm import FPSCounter
+
 
 class PositioningSystemModalOperator(bpy.types.Operator):
     bl_idname = "wm.positioning_system_modal"
@@ -119,6 +121,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
 
         pose = sceneModel.Pose(x, y, z, rx, ry, rz)
         DroneMovementHandler().notifyAll(pose, speed)
+        FPSCounter().notifyRender()
     
     def modal(self, context, event):
         if event.type == "TIMER":
@@ -157,7 +160,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
 
         wm = context.window_manager
         wm.modal_handler_add(self)
-        self._timer = wm.event_timer_add(0.1, window=context.window)
+        self._timer = wm.event_timer_add(0.03, window=context.window)
         
         PositioningSystemModalOperator.error_message = ""
 

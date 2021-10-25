@@ -5,6 +5,7 @@ import time
 
 from drone_control.patternModel import Singleton
 from drone_control.patternModel.stopThread import StoppableThread
+from drone_control.utilsAlgorithm import FPSCounter
 
 from . import msgpack_serialization as ms
 from . import datapacket as dp
@@ -90,6 +91,10 @@ class UDPServer(StoppableThread):
         if packet is not None and type(packet) != dp.TracePacket:
             print("Received : ", list(iter(packet)))
         Buffer().set_packet(packet)
+
+
+        if type(packet) == dp.TracePacket:
+            FPSCounter().notifyRotationChange()
 
         if type(packet) in UDPServer.ack_packets:
             Buffer().last_snt_pid += 1
