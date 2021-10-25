@@ -43,7 +43,7 @@ class MarvelmindThread(StoppableThread):
         logger = logging.getLogger("myblenderlog")
         
         mobile_pos = self.__dev.getMobileBeaconsPosition()
-        #FPSCounter().notifyPosition()
+        FPSCounter().notifyPositionChange()
         stationary_pos = self.__dev.getStationaryBeaconsPosition()
 
         txt = "Get mobile beacon data : "
