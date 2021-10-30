@@ -43,9 +43,9 @@ class PlanControllerObserver(Observer):
 
         self.__speed = 0
 
-        self.__bearing_color = RGBAColor(1.0, 1.0, 1.0, 1.0)
-        self.__path_color = RGBAColor(1.0, 0.0, 1.0, 1.0)
-        self.__tracking_color = RGBAColor(0.0, 1.0, 1.0, 1.0)
+        self.__bearing_color = RGBAColor(1., 0., 0., 1.)
+        self.__path_color = RGBAColor(1., 0., 1., 1.)
+        self.__tracking_color = RGBAColor(0.2, 0.1, 0.1, 1.)
         self.__tracking = DashedCurve([], self.__tracking_color)
         self.__tracking.color = self.__tracking_color
         self.__tracking.scale = 50
@@ -65,7 +65,7 @@ class PlanControllerObserver(Observer):
         txt1.x = 10
         txt1.y = 80
         txt1.text = f"next_pose={self.__next_pose_id}"
-        txt1.text_color = RGBAColor(1., 1., 1., 1.)
+        txt1.text_color = RGBAColor(0.6, 0.6, 0.6, 1.)
         HUDWriterOperator._textos['PLAN_EXECUTION_INFO_1'] = txt1
 
         # XYZ DISTANCE
@@ -95,7 +95,7 @@ class PlanControllerObserver(Observer):
         txt5.x = 10
         txt5.y = 20
         txt5.text = f"Height: {pose.location.z:0.2f} m | Speed {self.__speed:0.2f} m/s"
-        txt5.text_color = RGBAColor(1., 1., 1., 1.)
+        txt5.text_color = RGBAColor(0.6, 0.6, 0.6, 1.)
         HUDWriterOperator._textos['PLAN_EXECUTION_INFO_5'] = txt5
 
         # Path
@@ -113,7 +113,11 @@ class PlanControllerObserver(Observer):
         # Tracking
         if len(self.__tracking.points) >= 2:
             HUDWriterOperator._dashed_curve_3d['TRACKING'] = self.__tracking
-
+            #print(len(self.__tracking.points))
+        else:
+            if 'TRACKING' in HUDWriterOperator._dashed_curve_3d:
+                del HUDWriterOperator._dashed_curve_3d['TRACKING']
+        
         # Bearing
         if len(self.__tracking.points) >= 2:
             P = self.__tracking.points[-1]

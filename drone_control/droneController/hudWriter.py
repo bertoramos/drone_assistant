@@ -151,6 +151,7 @@ def __draw_curve_3d(curve):
 
 def __draw_dotted_curve_3d(curve):
     # Reutilizado de https://docs.blender.org/api/current/gpu.html#custom-shader-for-dotted-3d-line
+    
     vertex_shader = '''
     uniform mat4 u_ViewProjectionMatrix;
 
