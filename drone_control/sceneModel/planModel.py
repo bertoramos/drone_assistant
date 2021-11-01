@@ -140,7 +140,7 @@ def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_nu
     lock_object(bpy.data.objects[collider_obj.name_full])
 
     # Dibuja anotacion
-    color = mathutils.Vector((1.0, 1.0, 1.0, 1.0))
+    color = mathutils.Vector((0.4, 0.4, 0.4, 1.0))
     font = 14
     font_align = 'C'
     hint_space = 0.1

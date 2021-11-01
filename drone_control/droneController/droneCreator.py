@@ -124,7 +124,7 @@ def _load_drone_mesh(name, start_location, start_rotation, dimension):
 
 
 def _create_drone_note(mesh_id, address):
-    color = mathutils.Vector((1.0, 1.0, 1.0, 1.0))
+    color = mathutils.Vector((0.4, 0.4, 0.4, 1.0))
     font = 14
     font_align = 'C'
     hint_space = 0.1

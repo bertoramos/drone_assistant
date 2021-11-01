@@ -44,12 +44,12 @@ class PlanControllerObserver(Observer):
         self.__speed = 0
 
         self.__bearing_color = RGBAColor(1., 0., 0., 1.)
-        self.__path_color = RGBAColor(1., 0., 1., 1.)
-        self.__tracking_color = RGBAColor(0.2, 0.1, 0.1, 1.)
+        self.__path_color = RGBAColor(0., 1., 0., 1.)
+        self.__tracking_color = RGBAColor(0.988, 0.267, 0.059, 1.)
         self.__tracking = DashedCurve([], self.__tracking_color)
         self.__tracking.color = self.__tracking_color
         self.__tracking.scale = 50
-
+        
         self.__any_hidden = False
 
     def _show_info(self, pose):
