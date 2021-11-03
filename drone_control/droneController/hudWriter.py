@@ -6,7 +6,8 @@ import gpu
 from gpu_extras.batch import batch_for_shader
 
 from dataclasses import dataclass
-from typing import List
+from typing import List, Callable
+from bpy_types import Context
 
 from mathutils import Vector
 
@@ -25,16 +26,15 @@ class RGBAColor:
 
 @dataclass
 class Texto:
+    text: Callable[[Context], str] = lambda context: "TEXTO"
     font_id: int = 0
-    x: float = 15
-    y: float = 30
+    x: Callable[[Context], int] = 15
+    y: Callable[[Context], int] = 30
 
-    size: int = 20
+    size: Callable[[Context], int] = 20
     dpi : int = 72
 
     text_color: RGBAColor = RGBAColor(0,0,0,1)
-
-    text: str = "TEXTO"
 
 @dataclass
 class Point2D:
@@ -224,10 +224,10 @@ def draw_callback_px(self, context):
     for k in HUDWriterOperator._textos:
         txt = HUDWriterOperator._textos[k]
         
-        blf.position(txt.font_id, txt.x, txt.y, 0)
+        blf.position(txt.font_id, txt.x(context), txt.y(context), 0)
         blf.size(txt.font_id, txt.size, txt.dpi)
         blf.color(txt.font_id, txt.text_color.red, txt.text_color.green, txt.text_color.blue, txt.text_color.alpha)
-        blf.draw(txt.font_id, txt.text)
+        blf.draw(txt.font_id, txt.text(context))
 
 
 def draw_view_callback_px(self, context):
@@ -263,6 +263,53 @@ def draw_view_callback_px(self, context):
         curve = HUDWriterOperator._dashed_curve_3d[k]
         __draw_dotted_curve_3d(curve)
 
+
+def default_hud_create(context):
+
+    def persp(text_context):
+        r3d = text_context.space_data.region_3d
+        view_persp = r3d.view_perspective
+
+        if view_persp == "PERSP":
+            return "PERSPECTIVE"
+        else:
+            TOP    = Vector((0, 0, -1))
+            BOTTOM = Vector((0, 0, 1))
+            LEFT   = Vector((1, 0, 0))
+            RIGHT  = Vector((-1, 0, 0))
+            FRONT  = Vector((0, 1, 0))
+            BACK   = Vector((0, -1, 0))
+
+            view_rotation = r3d.view_rotation.to_euler()
+            vp = Vector((0,0,-1))
+            vp.rotate(view_rotation)
+
+            if (TOP - vp).length < 0.001:
+                return "TOP"
+            if (BOTTOM - vp).length < 0.001:
+                return "BOTTOM"
+            if (LEFT - vp).length < 0.001:
+                return "LEFT"
+            if (RIGHT - vp).length < 0.001:
+                return "RIGHT"
+            if (FRONT - vp).length < 0.001:
+                return "FRONT"
+            if (BACK - vp).length < 0.001:
+                return "BACK"
+    
+    x = lambda pos_context: pos_context.area.width // 2 - 20
+    y = lambda pos_context: pos_context.area.height - 50
+    print(x(context), y(context))
+    txt = Texto()
+    txt.text = persp
+    txt.x = x
+    txt.y = y
+    HUDWriterOperator._textos['VIEW_TYPE'] = txt
+
+def default_hud_delete(context):
+    if 'VIEW_TYPE' in HUDWriterOperator._textos:
+        del HUDWriterOperator._textos['VIEW_TYPE']
+
 class HUDWriterOperator(bpy.types.Operator):
     bl_idname = "wm.hudwriter"
     bl_label = "HUDWriter"
@@ -292,6 +339,8 @@ class HUDWriterOperator(bpy.types.Operator):
             bpy.types.SpaceView3D.draw_handler_remove(self._handler_2d, 'WINDOW')
             bpy.types.SpaceView3D.draw_handler_remove(self._handler_3d, 'WINDOW')
             self.redraw(context)
+
+            default_hud_delete(context)
             return {'FINISHED'}
         
         return {'PASS_THROUGH'}
@@ -304,6 +353,8 @@ class HUDWriterOperator(bpy.types.Operator):
             self._handler_3d = bpy.types.SpaceView3D.draw_handler_add(draw_view_callback_px, args, 'WINDOW', 'POST_VIEW')
 
             self._timer = context.window_manager.event_timer_add(0.1, window=context.window)
+
+            default_hud_create(context)
             
             context.window_manager.modal_handler_add(self)
 

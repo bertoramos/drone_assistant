@@ -62,39 +62,39 @@ class PlanControllerObserver(Observer):
 
         # Next pose id
         txt1 = Texto()
-        txt1.x = 10
-        txt1.y = 80
-        txt1.text = f"next_pose={self.__next_pose_id}"
+        txt1.x = lambda context : 10
+        txt1.y = lambda context : 80
+        txt1.text = lambda context: f"next_pose={self.__next_pose_id}"
         txt1.text_color = RGBAColor(0.6, 0.6, 0.6, 1.)
         HUDWriterOperator._textos['PLAN_EXECUTION_INFO_1'] = txt1
 
         # XYZ DISTANCE
         txt2 = Texto()
-        txt2.x = 10
-        txt2.y = 50
-        txt2.text = f"X: {xdist:0.2f} m"
+        txt2.x = lambda context : 10
+        txt2.y = lambda context : 50
+        txt2.text = lambda context: f"X: {xdist:0.2f} m"
         txt2.text_color = RGBAColor(248./255., 55./255., 82./255., 1.)
         HUDWriterOperator._textos['PLAN_EXECUTION_INFO_2'] = txt2
 
         txt3 = Texto()
-        txt3.x = 150
-        txt3.y = 50
-        txt3.text = f"Y: {ydist:0.2f} m"
+        txt3.x = lambda context : 150
+        txt3.y = lambda context : 50
+        txt3.text = lambda context: f"Y: {ydist:0.2f} m"
         txt3.text_color = RGBAColor(135./255., 213./255., 18./255., 1.)
         HUDWriterOperator._textos['PLAN_EXECUTION_INFO_3'] = txt3
 
         txt4 = Texto()
-        txt4.x = 300
-        txt4.y = 50
-        txt4.text = f"Z: {zdist:0.2f} m"
+        txt4.x = lambda context : 300
+        txt4.y = lambda context : 50
+        txt4.text = lambda context: f"Z: {zdist:0.2f} m"
         txt4.text_color = RGBAColor(45./255., 140./255., 248./255., 1.)
         HUDWriterOperator._textos['PLAN_EXECUTION_INFO_4'] = txt4
         
         # Height
         txt5 = Texto()
-        txt5.x = 10
-        txt5.y = 20
-        txt5.text = f"Height: {pose.location.z:0.2f} m | Speed {self.__speed:0.2f} m/s"
+        txt5.x = lambda context : 10
+        txt5.y = lambda context : 20
+        txt5.text = lambda context: f"Height: {pose.location.z:0.2f} m | Speed {self.__speed:0.2f} m/s"
         txt5.text_color = RGBAColor(0.6, 0.6, 0.6, 1.)
         HUDWriterOperator._textos['PLAN_EXECUTION_INFO_5'] = txt5
 
