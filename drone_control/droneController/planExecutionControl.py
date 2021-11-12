@@ -46,10 +46,10 @@ class PlanControllerObserver(Observer):
         self.__bearing_color = RGBAColor(1., 0., 0., 1.)
         self.__path_color = RGBAColor(0., 1., 0., 1.)
         self.__tracking_color = RGBAColor(0.988, 0.267, 0.059, 1.)
-        self.__tracking = DashedCurve([], self.__tracking_color)
-        self.__tracking.color = self.__tracking_color
-        self.__tracking.scale = 50
-        
+        self.__tracking_scale = 50
+
+        self.__tracking = []
+
         self.__any_hidden = False
 
     def _show_info(self, pose):
@@ -60,13 +60,14 @@ class PlanControllerObserver(Observer):
         ydist = abs(pose.location.y - self.__next_pose.location.y)
         zdist = abs(pose.location.z - self.__next_pose.location.z)
 
+        z_angle = round(math.degrees(pose.rotation.z), 2) % 360
         # Next pose id
         txt1 = Texto()
         txt1.x = lambda context : 10
         txt1.y = lambda context : 80
         txt1.text = lambda context: f"next_pose={self.__next_pose_id}"
         txt1.text_color = RGBAColor(0.6, 0.6, 0.6, 1.)
-        HUDWriterOperator._textos['PLAN_EXECUTION_INFO_1'] = txt1
+        HUDWriterOperator._textos['PLAN_EXECUTION_INFO_NEXT_POSE'] = txt1
 
         # XYZ DISTANCE
         txt2 = Texto()
@@ -74,21 +75,27 @@ class PlanControllerObserver(Observer):
         txt2.y = lambda context : 50
         txt2.text = lambda context: f"X: {xdist:0.2f} m"
         txt2.text_color = RGBAColor(248./255., 55./255., 82./255., 1.)
-        HUDWriterOperator._textos['PLAN_EXECUTION_INFO_2'] = txt2
+        HUDWriterOperator._textos['PLAN_EXECUTION_INFO_X_DIST'] = txt2
 
         txt3 = Texto()
         txt3.x = lambda context : 150
         txt3.y = lambda context : 50
         txt3.text = lambda context: f"Y: {ydist:0.2f} m"
         txt3.text_color = RGBAColor(135./255., 213./255., 18./255., 1.)
-        HUDWriterOperator._textos['PLAN_EXECUTION_INFO_3'] = txt3
+        HUDWriterOperator._textos['PLAN_EXECUTION_INFO_Y_DIST'] = txt3
 
         txt4 = Texto()
         txt4.x = lambda context : 300
         txt4.y = lambda context : 50
         txt4.text = lambda context: f"Z: {zdist:0.2f} m"
         txt4.text_color = RGBAColor(45./255., 140./255., 248./255., 1.)
-        HUDWriterOperator._textos['PLAN_EXECUTION_INFO_4'] = txt4
+        HUDWriterOperator._textos['PLAN_EXECUTION_INFO_Z_DIST'] = txt4
+
+        txt_angle = Texto()
+        txt_angle.x = lambda context: 450
+        txt_angle.y = lambda context: 50
+        txt_angle.text = lambda context: f"Angle: {z_angle:0.2f} deg"
+        HUDWriterOperator._textos['PLAN_EXECUTION_INFO_Z_ANGLE'] = txt_angle
         
         # Height
         txt5 = Texto()
@@ -96,7 +103,7 @@ class PlanControllerObserver(Observer):
         txt5.y = lambda context : 20
         txt5.text = lambda context: f"Height: {pose.location.z:0.2f} m | Speed {self.__speed:0.2f} m/s"
         txt5.text_color = RGBAColor(0.6, 0.6, 0.6, 1.)
-        HUDWriterOperator._textos['PLAN_EXECUTION_INFO_5'] = txt5
+        HUDWriterOperator._textos['PLAN_EXECUTION_INFO_HEIGHT_SPEED'] = txt5
 
         # Path
         path_curve = Curve([])
@@ -108,34 +115,40 @@ class PlanControllerObserver(Observer):
         path_curve.points.append(p2)
 
         path_curve.color = self.__path_color
-        HUDWriterOperator._curves_3d['PATH'] = path_curve
+        HUDWriterOperator._curves_3d['PLAN_EXECUTION_PATH'] = path_curve
 
         # Tracking
-        if len(self.__tracking.points) >= 2:
-            HUDWriterOperator._dashed_curve_3d['TRACKING'] = self.__tracking
+        if len(self.__tracking) >= 2:
+            curve = DashedCurve([Point3D(pose.location.x, pose.location.y, pose.location.z) for pose in self.__tracking], self.__tracking_scale)
+            curve.color = self.__tracking_color
+            HUDWriterOperator._dashed_curve_3d['PLAN_EXECUTION_TRACKING'] = curve
             #print(len(self.__tracking.points))
         else:
-            if 'TRACKING' in HUDWriterOperator._dashed_curve_3d:
-                del HUDWriterOperator._dashed_curve_3d['TRACKING']
+            if 'PLAN_EXECUTION_TRACKING' in HUDWriterOperator._dashed_curve_3d:
+                del HUDWriterOperator._dashed_curve_3d['PLAN_EXECUTION_TRACKING']
         
         # Bearing
-        if len(self.__tracking.points) >= 2:
-            P = self.__tracking.points[-1]
-            Q = self.__tracking.points[-2]
+        if len(self.__tracking) >= 2:
+            P = self.__tracking[-1].location
+            Q = self.__tracking[-2].location
             P = Vector((P.x, P.y, P.z))
             Q = Vector((Q.x, Q.y, Q.z))
             v = (Q-P).normalized()
             
             R = P - 0.25*v
             
-            arrow = Arrow(Point3D(P.x, P.y, P.z), Point3D(R.x, R.y, R.z), head_len=0.05, head_size=0.02, color=self.__bearing_color)
-            HUDWriterOperator._arrows_3d['BEARING'] = arrow
+            if v.length > 0:
+                arrow = Arrow(Point3D(P.x, P.y, P.z), Point3D(R.x, R.y, R.z), head_len=0.05, head_size=0.02, color=self.__bearing_color)
+                HUDWriterOperator._arrows_3d['PLAN_EXECUTION_BEARING'] = arrow
+            else:
+                if 'PLAN_EXECUTION_BEARING' in HUDWriterOperator._arrows_3d:
+                    del HUDWriterOperator._arrows_3d['PLAN_EXECUTION_BEARING']
         else:
-            if 'BEARING' in HUDWriterOperator._arrows_3d:
-                del HUDWriterOperator._arrows_3d['BEARING']
+            if 'PLAN_EXECUTION_BEARING' in HUDWriterOperator._arrows_3d:
+                del HUDWriterOperator._arrows_3d['PLAN_EXECUTION_BEARING']
         
         # Drone position draw
-        HUDWriterOperator._star_3d['STAR_DRONE_POSITION'] = Star(Point3D(pose.location.x, pose.location.y, pose.location.z), 0.1)
+        HUDWriterOperator._star_3d['PLAN_EXECUTION_STAR_DRONE_POSITION'] = Star(Point3D(pose.location.x, pose.location.y, pose.location.z), 0.1)
 
         self.__current_plan.highlight(self.__next_pose_id)
 
@@ -150,32 +163,35 @@ class PlanControllerObserver(Observer):
         #        self.__current_plan.show_pose(pidx)
     
     def _clear_info(self):
-        if 'PLAN_EXECUTION_INFO_1' in HUDWriterOperator._textos:
-            del HUDWriterOperator._textos['PLAN_EXECUTION_INFO_1']
+        if 'PLAN_EXECUTION_INFO_NEXT_POSE' in HUDWriterOperator._textos:
+            del HUDWriterOperator._textos['PLAN_EXECUTION_INFO_NEXT_POSE']
         
-        if 'PLAN_EXECUTION_INFO_2' in HUDWriterOperator._textos:
-            del HUDWriterOperator._textos['PLAN_EXECUTION_INFO_2']
+        if 'PLAN_EXECUTION_INFO_X_DIST' in HUDWriterOperator._textos:
+            del HUDWriterOperator._textos['PLAN_EXECUTION_INFO_X_DIST']
         
-        if 'PLAN_EXECUTION_INFO_3' in HUDWriterOperator._textos:
-            del HUDWriterOperator._textos['PLAN_EXECUTION_INFO_3']
+        if 'PLAN_EXECUTION_INFO_Y_DIST' in HUDWriterOperator._textos:
+            del HUDWriterOperator._textos['PLAN_EXECUTION_INFO_Y_DIST']
         
-        if 'PLAN_EXECUTION_INFO_4' in HUDWriterOperator._textos:
-            del HUDWriterOperator._textos['PLAN_EXECUTION_INFO_4']
+        if 'PLAN_EXECUTION_INFO_Z_DIST' in HUDWriterOperator._textos:
+            del HUDWriterOperator._textos['PLAN_EXECUTION_INFO_Z_DIST']
         
-        if 'PLAN_EXECUTION_INFO_5' in HUDWriterOperator._textos:
-            del HUDWriterOperator._textos['PLAN_EXECUTION_INFO_5']
+        if 'PLAN_EXECUTION_INFO_Z_ANGLE' in HUDWriterOperator._textos:
+            del HUDWriterOperator._textos['PLAN_EXECUTION_INFO_Z_ANGLE']
         
-        if 'PATH' in HUDWriterOperator._curves_3d:
-            del HUDWriterOperator._curves_3d['PATH']
+        if 'PLAN_EXECUTION_INFO_HEIGHT_SPEED' in HUDWriterOperator._textos:
+            del HUDWriterOperator._textos['PLAN_EXECUTION_INFO_HEIGHT_SPEED']
         
-        if 'TRACKING' in HUDWriterOperator._dashed_curve_3d:
-            del HUDWriterOperator._dashed_curve_3d['TRACKING']
+        if 'PLAN_EXECUTION_PATH' in HUDWriterOperator._curves_3d:
+            del HUDWriterOperator._curves_3d['PLAN_EXECUTION_PATH']
         
-        if 'BEARING' in HUDWriterOperator._arrows_3d:
-            del HUDWriterOperator._arrows_3d['BEARING']
+        if 'PLAN_EXECUTION_TRACKING' in HUDWriterOperator._dashed_curve_3d:
+            del HUDWriterOperator._dashed_curve_3d['PLAN_EXECUTION_TRACKING']
         
-        if 'STAR_DRONE_POSITION' in HUDWriterOperator._star_3d:
-            del HUDWriterOperator._star_3d['STAR_DRONE_POSITION']
+        if 'PLAN_EXECUTION_BEARING' in HUDWriterOperator._arrows_3d:
+            del HUDWriterOperator._arrows_3d['PLAN_EXECUTION_BEARING']
+        
+        if 'PLAN_EXECUTION_STAR_DRONE_POSITION' in HUDWriterOperator._star_3d:
+            del HUDWriterOperator._star_3d['PLAN_EXECUTION_STAR_DRONE_POSITION']
         
         self.__current_plan.no_highlight()
 
@@ -280,19 +296,20 @@ class PlanControllerObserver(Observer):
             return
         
         loc_dist = pose.get_location_distance(self.__next_pose)
-        rot_dist = pose.get_rotation_distance(self.__next_pose)
+        #rot_dist = pose.get_rotation_distance(self.__next_pose)
+        rot_dist = abs((pose.rotation.z % (2*math.pi) ) - (self.__next_pose.rotation.z % (2*math.pi) ))
 
         self.__speed = speed
         
         EPS = 0.1 # bpy.context.scene.TOL
-        if loc_dist < EPS and rot_dist.x < EPS and rot_dist.y < EPS and rot_dist.z < EPS:
+        if loc_dist < EPS and rot_dist < EPS:
             if self.__next_pose_id + 1 < len(list(iter(self.__current_plan))):
                 self.__prev_pose_id += 1
                 self.__next_pose_id += 1
                 self.__prev_pose = self.__current_plan.getPose(self.__prev_pose_id)
                 self.__next_pose = self.__current_plan.getPose(self.__next_pose_id)
 
-                self.__tracking.points.clear()
+                self.__tracking.clear()
                 # print("New pose")
                 self._show_info(pose)
 
@@ -303,14 +320,16 @@ class PlanControllerObserver(Observer):
                 self.stop()
                 return
         else:
-            if len(self.__tracking.points) >= 1:
-                last_point = self.__tracking.points[-1]
-                if math.dist((pose.location.x, pose.location.y, pose.location.z), (last_point.x, last_point.y, last_point.z)) > 0:
-                    p = Point3D(pose.location.x, pose.location.y, pose.location.z)
-                    self.__tracking.points.append(p)
+            if len(self.__tracking) >= 1:
+                last_pose = self.__tracking[-1]
+                
+                loc_dist = math.dist((pose.location.x, pose.location.y, pose.location.z), (last_pose.location.x, last_pose.location.y, last_pose.location.z))
+
+                rot_dist = abs( (pose.rotation.z % (2*math.pi) ) - (last_pose.rotation.z % (2*math.pi) ) )
+                if loc_dist > 0 or rot_dist > 0:
+                    self.__tracking.append(pose)
             else:
-                p = Point3D(pose.location.x, pose.location.y, pose.location.z)
-                self.__tracking.points.append(p)
+                self.__tracking.append(pose)
             self._show_info(pose)
 
             # print(f"next_pose={self.__next_pose} {loc_dist = :0.4f} meters and {rot_dist = :0.4f} degrees")

@@ -97,14 +97,15 @@ def __draw_arrow_3d(arrow):
     head_length = arrow.head_len
     head_size = arrow.head_size
     color = arrow.color.red, arrow.color.green, arrow.color.blue, arrow.color.alpha
-
-    # Arrow line
-    __draw_line_3d(color, start, end)
-
+    
     start_vec = Vector(start)
     end_vec = Vector(end)
 
     u = (end_vec-start_vec).normalized()
+    
+    # Arrow line
+    __draw_line_3d(color, start, end)
+    
     v = get_fixed_perpendicular(u).normalized()
     w = u.cross(v)
 
