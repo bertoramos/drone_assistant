@@ -2,6 +2,7 @@
 import bpy
 import bgl
 import blf
+from bpy.types import Function
 import gpu
 from gpu_extras.batch import batch_for_shader
 
@@ -10,6 +11,13 @@ from typing import List, Callable
 from bpy_types import Context
 
 from mathutils import Vector
+from math import sin, cos, pi
+
+import numpy as np
+
+
+#########################
+### Basics
 
 @dataclass
 class RGBAColor:
@@ -25,18 +33,6 @@ class RGBAColor:
         assert 0 <= self.alpha <= 1, "Alpha channel is a float between 0 and 1"
 
 @dataclass
-class Texto:
-    text: Callable[[Context], str] = lambda context: "TEXTO"
-    font_id: int = 0
-    x: Callable[[Context], int] = 15
-    y: Callable[[Context], int] = 30
-
-    size: Callable[[Context], int] = 20
-    dpi : int = 72
-
-    text_color: RGBAColor = RGBAColor(0,0,0,1)
-
-@dataclass
 class Point2D:
     x: float
     y: float
@@ -46,6 +42,9 @@ class Point3D:
     x: float
     y: float
     z: float
+
+################################
+### 3D 
 
 @dataclass
 class Curve:
@@ -70,10 +69,49 @@ class Arrow:
 class Star:
     point: Point3D
     size: float
-
     color: RGBAColor = RGBAColor(1, 1, 0, 1)
 
+#############################################
+## 2D
+
+@dataclass
+class Texto:
+    text: Callable[[Context], str] = lambda context: "TEXTO"
+    font_id: int = 0
+    x: Callable[[Context], int] = 15
+    y: Callable[[Context], int] = 30
+
+    size: Callable[[Context], int] = 20
+    dpi : int = 72
+
+    text_color: RGBAColor = RGBAColor(0,0,0,1)
+
+@dataclass
+class Circle2D:
+    center: Callable[[Context], Point2D]
+    radius: float
+    step: int
+
+    color: RGBAColor = RGBAColor(1, 0, 0, 1)
+
+    xfun: Callable[[Point2D, float, int], float] = lambda center, radius, alpha: center.x + radius*cos(alpha)
+    yfun: Callable[[Point2D, float, int], float] = lambda center, radius, alpha: center.y + radius*sin(alpha)
+
+@dataclass
+class Triangle2D:
+    p0: Callable[[Context], Point2D]
+    p1: Callable[[Context], Point2D]
+    p2: Callable[[Context], Point2D]
+
+    color: RGBAColor = RGBAColor(1, 0, 0, 1)
+
 #######################################################
+
+def __draw_text_2d(context, txt):
+    blf.position(txt.font_id, txt.x(context), txt.y(context), 0)
+    blf.size(txt.font_id, txt.size, txt.dpi)
+    blf.color(txt.font_id, txt.text_color.red, txt.text_color.green, txt.text_color.blue, txt.text_color.alpha)
+    blf.draw(txt.font_id, txt.text(context))
 
 def get_fixed_perpendicular(u):
 
@@ -217,18 +255,53 @@ def __draw_star(star):
     for c in curves:
         __draw_curve_3d(c)
 
+def __draw_circle_2d(context, circle):
+    xfun = lambda alpha: circle.xfun(circle.center(context), circle.radius, alpha)
+    yfun = lambda alpha: circle.yfun(circle.center(context), circle.radius, alpha)
+
+    vertices_circle = ((circle.center(context).x, circle.center(context).y), ) + tuple((xfun(a), yfun(a)) for a in np.linspace(0, 2*pi, circle.step))
+    indices_circle = tuple((0, e, e+1) for e in range(1, len(vertices_circle)-1))
+    color = (circle.color.red, circle.color.green, circle.color.blue, circle.color.alpha)
+
+    shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+    batch = batch_for_shader(shader, 'TRIS', {"pos": vertices_circle}, indices=indices_circle)
+
+    shader.bind()
+    shader.uniform_float("color", color)
+    batch.draw(shader)
+
+def __draw_triangle_2d(context, triangle):
+
+    x0, y0 = triangle.p0(context).x, triangle.p0(context).y
+    x1, y1 = triangle.p1(context).x, triangle.p1(context).y
+    x2, y2 = triangle.p2(context).x, triangle.p2(context).y
+    coords = [(x0, y0), (x1, y1), (x2, y2)]
+    indices = [(0, 1, 2)]
+    shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+    batch = batch_for_shader(shader, 'TRIS', {"pos": coords}, indices=indices)
+
+    color = (triangle.color.red, triangle.color.green, triangle.color.blue, triangle.color.alpha)
+    shader.bind()
+    shader.uniform_float("color", color)
+    batch.draw(shader)
+
 ############################################################################
 
 def draw_callback_px(self, context):
     font_id = 0
+
+    for k in HUDWriterOperator._circles_2d:
+        circle = HUDWriterOperator._circles_2d[k]
+        __draw_circle_2d(context, circle)
+    
+    for k in HUDWriterOperator._triangle_2d:
+        triangle = HUDWriterOperator._triangle_2d[k]
+        __draw_triangle_2d(context, triangle)
+    
     # Draw text 2D
     for k in HUDWriterOperator._textos:
         txt = HUDWriterOperator._textos[k]
-        
-        blf.position(txt.font_id, txt.x(context), txt.y(context), 0)
-        blf.size(txt.font_id, txt.size, txt.dpi)
-        blf.color(txt.font_id, txt.text_color.red, txt.text_color.green, txt.text_color.blue, txt.text_color.alpha)
-        blf.draw(txt.font_id, txt.text(context))
+        __draw_text_2d(context, txt)
 
 
 def draw_view_callback_px(self, context):
@@ -300,7 +373,6 @@ def default_hud_create(context):
     
     x = lambda pos_context: pos_context.area.width // 2 - 20
     y = lambda pos_context: pos_context.area.height - 50
-    print(x(context), y(context))
     txt = Texto()
     txt.text = persp
     txt.x = x
@@ -316,7 +388,13 @@ class HUDWriterOperator(bpy.types.Operator):
     bl_label = "HUDWriter"
     
     _open = False
+    
+    # 2D WIDGETS
     _textos = {}
+    _circles_2d = {}
+    _triangle_2d = {}
+
+    # 3D WIDGETS
     _curves_3d = {}
     _dashed_curve_3d = {}
     _arrows_3d = {}

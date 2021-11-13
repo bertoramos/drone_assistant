@@ -48,8 +48,8 @@ class ManualSimulationModalOperator(bpy.types.Operator):
         self.__yaw = 0
         self.__pitch = 0
         self.__roll = 0
-        self.__forward = Vector((0, 1, 0))
-        self.__right = Vector((1, 0, 0))
+        self.__forward = Vector((1, 0, 0))
+        self.__right = Vector((0, 1, 0))
         self.__up = Vector((0, 0, 1))
         self.__speed = 0
 
@@ -66,8 +66,8 @@ class ManualSimulationModalOperator(bpy.types.Operator):
 
         action = {'W': (self.__forward, +1),
                   'S': (self.__forward, -1),
-                  'D': (self.__right, +1),
-                  'A': (self.__right, -1),
+                  'D': (self.__right, -1),
+                  'A': (self.__right, +1),
                   'E': (self.__up, +1),
                   'C': (self.__up, -1)
                   }
@@ -93,10 +93,10 @@ class ManualSimulationModalOperator(bpy.types.Operator):
         
         action = {'NUMPAD_4': (+1, self.__up, angle_step, 0, 0), # rotate left
                   'NUMPAD_6': (-1, self.__up, angle_step, 0, 0), # rotate right
-                  'NUMPAD_8': (+1, self.__right, 0, angle_step, 0), # rotate up
-                  'NUMPAD_2': (-1, self.__right, 0, angle_step, 0), # rotate down
-                  'NUMPAD_9': (-1, self.__forward, 0, 0, angle_step), # roll right
-                  'NUMPAD_7': (+1, self.__forward, 0, 0, angle_step)  # roll left
+                  'NUMPAD_9': (+1, self.__right, 0, angle_step, 0), # rotate up
+                  'NUMPAD_7': (-1, self.__right, 0, angle_step, 0), # rotate down
+                  'NUMPAD_8': (-1, self.__forward, 0, 0, angle_step), # roll right
+                  'NUMPAD_2': (+1, self.__forward, 0, 0, angle_step)  # roll left
                   }
 
         omit = {'NUMPAD_1','NUMPAD_3','NUMPAD_5'}

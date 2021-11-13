@@ -80,7 +80,7 @@ def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_nu
     orientation_obj = bpy.context.active_object
     orientation_obj.name = orientation_id
     orientation_id = orientation_obj.name_full
-    bpy.data.objects[orientation_id].rotation_euler.x = -math.pi/2
+    bpy.data.objects[orientation_id].rotation_euler.y = math.pi/2
     bpy.data.objects[orientation_id].object_type = "DRONE_ARROW"
     bpy.data.objects[orientation_id].show_in_front = True
 
@@ -140,7 +140,7 @@ def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_nu
     lock_object(bpy.data.objects[collider_obj.name_full])
 
     # Dibuja anotacion
-    color = mathutils.Vector((0.4, 0.4, 0.4, 1.0))
+    color = mathutils.Vector((0, 0, 0, 1.0))
     font = 14
     font_align = 'C'
     hint_space = 0.1
