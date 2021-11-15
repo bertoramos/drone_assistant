@@ -334,7 +334,13 @@ class PlanGeneratorModalOperator(bpy.types.Operator):
         
         drone = sceneModel.DronesCollection().get(self.drone_name)
         self.dim = bpy.data.objects[drone.colliderID].dimensions.copy()
-        
+
+        zdiff = area_dim.z + self.dim.z
+        zdiff = (area_dim.z - zdiff)/2
+
+        area_location.z -= zdiff
+        bpy.data.objects[self.obj_name].location = area_location
+
         self.move_margin(area_location, area_scale, area_dim)
         # self.last_loc = bpy.data.objects[self.obj_name].location.copy()
         # self.last_dim = bpy.data.objects[self.obj_name].dimensions.copy()
@@ -350,7 +356,7 @@ class PlanGeneratorModalOperator(bpy.types.Operator):
         ydim = area_dim.y + self.dim.y
         zdim = area_dim.z + self.dim.z
         bpy.data.objects[self.collider_name].dimensions = Vector((xdim, ydim, zdim))
-            
+        
         self.last_loc = area_location
         self.last_dim = area_dim
     

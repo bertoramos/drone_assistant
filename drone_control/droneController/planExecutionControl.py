@@ -82,20 +82,20 @@ class PlanControllerObserver(Observer):
 
         ## DRAW CIRCLES
 
-        pos_prev = (lambda context : context.area.width - 150, lambda context : 110)
-        pos_curr = (lambda context : context.area.width - 100, lambda context : 110)
-        pos_next = (lambda context : context.area.width - 50, lambda context : 110)
+        pos_prev = (lambda context : context.area.width - 350, lambda context : 110)
+        pos_curr = (lambda context : context.area.width - 250, lambda context : 110)
+        pos_next = (lambda context : context.area.width - 150, lambda context : 110)
 
         center = lambda context: Point2D(pos_prev[0](context), pos_prev[1](context))
-        circle1 = Circle2D(center=center, radius=20, step=50)
+        circle1 = Circle2D(center=center, radius=40, step=50)
         circle1.color = RGBAColor(0.8, 0.8, 0.8, 0.5)
 
         center = lambda context: Point2D(pos_curr[0](context), pos_curr[1](context))
-        circle2 = Circle2D(center=center, radius=20, step=50)
+        circle2 = Circle2D(center=center, radius=40, step=50)
         circle2.color = RGBAColor(0, 1, 0, 0.5)
         
         center = lambda context: Point2D(pos_next[0](context), pos_next[1](context))
-        circle3 = Circle2D(center=center, radius=20, step=50)
+        circle3 = Circle2D(center=center, radius=40, step=50)
         circle3.color = RGBAColor(0, 0.6, 0, 0.5)
     
         HUDWriterOperator._circles_2d[PLAN_EXECUTION_PREV_POSE_CIRCLE] = circle1
@@ -108,15 +108,15 @@ class PlanControllerObserver(Observer):
         ym = lambda context: pos_prev[1](context)
 
         p0 = lambda context: Point2D(xm1(context), ym(context))
-        p1 = lambda context: Point2D(xm1(context)-10, ym(context)+10)
-        p2 = lambda context: Point2D(xm1(context)-10, ym(context)-10)
+        p1 = lambda context: Point2D(xm1(context)-20, ym(context)+20)
+        p2 = lambda context: Point2D(xm1(context)-20, ym(context)-20)
         tri1 = Triangle2D(p0, p1, p2)
         tri1.color = RGBAColor(0,0,0,1)
 
         xm2 = lambda context: 5+ (pos_curr[0](context) + pos_next[0](context))/2
         p0 = lambda context: Point2D(xm2(context), ym(context))
-        p1 = lambda context: Point2D(xm2(context)-10, ym(context)+10)
-        p2 = lambda context: Point2D(xm2(context)-10, ym(context)-10)
+        p1 = lambda context: Point2D(xm2(context)-20, ym(context)+20)
+        p2 = lambda context: Point2D(xm2(context)-20, ym(context)-20)
         tri2 = Triangle2D(p0, p1, p2)
         tri2.color = RGBAColor(0,0,0,1)
 
@@ -128,19 +128,21 @@ class PlanControllerObserver(Observer):
 
         if 0 <= self.__prev_pose_id < plan_len:
             txt = Texto()
-            txt.x = lambda context : pos_prev[0](context)-5
-            txt.y = lambda context : pos_prev[1](context)-5
+            txt.x = lambda context : pos_prev[0](context)-10
+            txt.y = lambda context : pos_prev[1](context)-10
             txt.text = lambda context: f"{self.__prev_pose_id}"
             txt.text_color = RGBAColor(0, 0, 0, 1.)
+            txt.size = 40
             HUDWriterOperator._textos[PLAN_EXECUTION_PREV_POSE_NUM] = txt
         elif PLAN_EXECUTION_PREV_POSE_NUM in HUDWriterOperator._textos:
             del HUDWriterOperator._textos[PLAN_EXECUTION_PREV_POSE_NUM]
         
         if 0 <= self.__next_pose_id < plan_len:
             txt = Texto()
-            txt.x = lambda context : pos_curr[0](context)-5
-            txt.y = lambda context : pos_curr[1](context)-5
+            txt.x = lambda context : pos_curr[0](context)-10
+            txt.y = lambda context : pos_curr[1](context)-10
             txt.text = lambda context: f"{self.__next_pose_id}"
+            txt.size = 40
             txt.text_color = RGBAColor(0, 0, 0, 1.)
             HUDWriterOperator._textos[PLAN_EXECUTION_CURR_POSE_NUM] = txt
         elif PLAN_EXECUTION_CURR_POSE_NUM in HUDWriterOperator._textos:
@@ -149,9 +151,10 @@ class PlanControllerObserver(Observer):
         post_pose_id = self.__next_pose_id + 1
         if 0 <= post_pose_id < plan_len:
             txt = Texto()
-            txt.x = lambda context : pos_next[0](context)-5
-            txt.y = lambda context : pos_next[1](context)-5
+            txt.x = lambda context : pos_next[0](context)-10
+            txt.y = lambda context : pos_next[1](context)-10
             txt.text = lambda context: f"{post_pose_id}"
+            txt.size = 40
             txt.text_color = RGBAColor(0, 0, 0, 1.)
             HUDWriterOperator._textos[PLAN_EXECUTION_NEXT_POSE_NUM] = txt
         elif PLAN_EXECUTION_NEXT_POSE_NUM in HUDWriterOperator._textos:
@@ -200,26 +203,30 @@ class PlanControllerObserver(Observer):
         txt2.y = lambda context : 50
         txt2.text = lambda context: f"X: {xdist:0.2f} m"
         txt2.text_color = RGBAColor(248./255., 55./255., 82./255., 1.)
+        txt2.size = 30
         HUDWriterOperator._textos[PLAN_EXECUTION_INFO_X_DIST] = txt2
 
         txt3 = Texto()
-        txt3.x = lambda context : 120
+        txt3.x = lambda context : 180
         txt3.y = lambda context : 50
         txt3.text = lambda context: f"Y: {ydist:0.2f} m"
         txt3.text_color = RGBAColor(135./255., 213./255., 18./255., 1.)
+        txt3.size = 30
         HUDWriterOperator._textos[PLAN_EXECUTION_INFO_Y_DIST] = txt3
 
         txt4 = Texto()
-        txt4.x = lambda context : 220
+        txt4.x = lambda context : 350
         txt4.y = lambda context : 50
         txt4.text = lambda context: f"Z: {zdist:0.2f} m"
         txt4.text_color = RGBAColor(45./255., 140./255., 248./255., 1.)
+        txt4.size = 30
         HUDWriterOperator._textos[PLAN_EXECUTION_INFO_Z_DIST] = txt4
 
         txt_angle = Texto()
-        txt_angle.x = lambda context: 320
+        txt_angle.x = lambda context: 520
         txt_angle.y = lambda context: 50
         txt_angle.text = lambda context: f"Angle: {z_angle:0.2f} deg"
+        txt_angle.size = 30
         HUDWriterOperator._textos[PLAN_EXECUTION_INFO_Z_ANGLE] = txt_angle
         
         # Height
@@ -228,6 +235,7 @@ class PlanControllerObserver(Observer):
         txt5.y = lambda context : 20
         txt5.text = lambda context: f"Height: {pose.location.z:0.2f} m | Speed {self.__speed:0.2f} m/s"
         txt5.text_color = RGBAColor(0.6, 0.6, 0.6, 1.)
+        txt5.size = 30
         HUDWriterOperator._textos[PLAN_EXECUTION_INFO_HEIGHT_SPEED] = txt5
 
         # Path

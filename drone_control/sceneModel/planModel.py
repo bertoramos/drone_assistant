@@ -2,6 +2,7 @@
 import bpy
 import math
 import mathutils
+import threading
 
 from .pose import Pose
 from drone_control.utilsAlgorithm import draw_text
@@ -246,6 +247,12 @@ def get_level_percentage(level, step):
     g = lambda x: x if x > 0 else 0
     return g(f(level))
 
+def refresh_all_areas():
+    for wm in bpy.data.window_managers:
+        for w in wm.windows:
+            for area in w.screen.areas:
+                area.tag_redraw()
+
 class PlanModel:
 
     def __init__(self, planID, droneID):
@@ -319,7 +326,7 @@ class PlanModel:
             if obj.hide_get():
                 obj.hide_set(False)
                 self.__show_obj_children(obj)
-    
+
     def draw(self):
         drone = DronesCollection().get(self.__droneID)
         drone_obj = bpy.data.objects[drone.meshID] if drone.meshID in bpy.data.objects else None
@@ -327,6 +334,10 @@ class PlanModel:
 
         if drone_obj is None or collider_obj is None: return
 
+        # TODO: Mostrar progreso
+        dim = len(self.__plan)
+        bpy.context.window_manager.progress_begin(0, 100)
+        
         for position_num, pose in enumerate(self.__plan):
             cursor_name = create_cursor(pose.location, pose.rotation, drone_obj.dimensions.copy(), collider_obj.dimensions.copy(), collider_obj.scale.copy(), position_num)
 
@@ -335,6 +346,12 @@ class PlanModel:
             bpy.data.objects[cursor_name].lock_location[:] = (True, True, True)
             bpy.data.objects[cursor_name].lock_rotation[:] = (True, True, True)
             bpy.data.objects[cursor_name].lock_scale[:] = (True, True, True)
+
+            bpy.context.window_manager.progress_update((position_num+1)*100/dim)
+
+        
+        bpy.context.window_manager.progress_end()
+    
 
     def delete(self):
         for name in self.__plan_meshes:

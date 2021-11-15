@@ -370,6 +370,7 @@ def default_hud_create(context):
                 return "FRONT"
             if (BACK - vp).length < 0.001:
                 return "BACK"
+        return ""
     
     x = lambda pos_context: pos_context.area.width // 2 - 20
     y = lambda pos_context: pos_context.area.height - 50
