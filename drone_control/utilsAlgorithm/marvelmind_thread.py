@@ -20,6 +20,8 @@ class Beacon:
     y: float
     z: float
 
+    angle: float
+
     is_stationary: bool
 
     speed: float = 0.0
@@ -52,8 +54,9 @@ class MarvelmindThread(StoppableThread):
         for address, xyz in mobile_pos.items():
             
             current_beacon = Beacon(address,
-                                    xyz[3],
-                                    xyz[0], xyz[1], xyz[2],
+                                    xyz[0],
+                                    xyz[1], xyz[2], xyz[3], 
+                                    xyz[4],
                                     False)
             
             
@@ -78,12 +81,14 @@ class MarvelmindThread(StoppableThread):
         for address, xyz in stationary_pos.items():
             current_beacon = Beacon(address,
                                     0,
-                                    xyz[0], xyz[1], xyz[2],
+                                    xyz[0], xyz[1], xyz[2], 
+                                    0,
                                     True)
             
             self.__beacons[address] = current_beacon
             txt += "[" + str(address) + " : " + str(xyz) + "] "
-    
+
+        logger.info(txt)
         # if len(stationary_pos)>0: logger.info(txt)
     
 
@@ -94,11 +99,12 @@ class MarvelmindThread(StoppableThread):
         return self.__beacons
 
     def getStationaryBeacons(self):
-        return [beacon for addr, beacon in self.__beacons.items() if beacon.is_stationary]
+        return [self.__beacons[addr] for addr in list(self.__beacons) if self.__beacons[addr].is_stationary]
     
     def __str__(self):
         txt = ""
-        for address, pos in self.__beacons.items():
+        for address in list(self.__beacons):
+            pos = self.__beacons[address]
             txt += str(pos) + "\n"
         return txt
     

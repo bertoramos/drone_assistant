@@ -129,7 +129,7 @@ def _create_drone_note(mesh_id, address):
     font_align = 'C'
     hint_space = 0.1
     font_rotation = 0
-    text = f"{mesh_id} | Beacon {address}"
+    text = f"{mesh_id} | Beacon {address[0]}-{address[1]}"
 
     drone_note_name = draw_text(bpy.context, mesh_id + "_note", text, mathutils.Vector((0,0,0)), color, hint_space, font, font_align, font_rotation)
     if drone_note_name is not None:
@@ -187,7 +187,10 @@ class DroneProps(bpy.types.PropertyGroup):
     prop_drone_location: bpy.props.FloatVectorProperty(name="Location", description="Initial drone location", default=(0.0, 0.0, 0.0), subtype='XYZ', size=3)
     prop_drone_rotation: bpy.props.FloatVectorProperty(name="Rotation", description="Initial drone rotation", default=(0.0, 0.0, 0.0), subtype='XYZ', size=3)
     prop_drone_dimension: bpy.props.FloatVectorProperty(name="Dimension", description="Dimension drone ", default=(0.5, 0.5, 0.5), min=0.0, subtype='XYZ', size=3)
-    prop_drone_address: bpy.props.IntProperty(name="address", description="Drone address", min=1, default=6)
+    
+    prop_drone_address_left: bpy.props.IntProperty(name="address_left", description="Drone address", min=1, default=12)
+    prop_drone_address_right: bpy.props.IntProperty(name="address_right", description="Drone address", min=1, default=13)
+
     prop_drone_server_address: bpy.props.StringProperty(name="Server address", description="Server address", default="192.168.0.16")
     prop_drone_server_port: bpy.props.IntProperty(name="Server port", description="Server port", default=4445, min=1)
     prop_drone_client_address: bpy.props.StringProperty(name="Client address", description="Client address", default="192.168.0.24")
@@ -209,7 +212,12 @@ class CreateDroneOperator(bpy.types.Operator):
         start_location = context.scene.drone_props.prop_drone_location
         start_rotation = _toRadians(context.scene.drone_props.prop_drone_rotation)
         dimension = context.scene.drone_props.prop_drone_dimension
-        address = context.scene.drone_props.prop_drone_address
+
+        address_left = context.scene.drone_props.prop_drone_address_left
+        address_right = context.scene.drone_props.prop_drone_address_right
+        
+        address = address_left, address_right
+
         server_addr = context.scene.drone_props.prop_drone_server_address # "192.168.0.16"
         server_port = context.scene.drone_props.prop_drone_server_port # 4445
         client_addr = context.scene.drone_props.prop_drone_client_address # "192.168.0.24"
@@ -234,7 +242,12 @@ class CreateDroneOperator(bpy.types.Operator):
         self.layout.prop(props, "prop_drone_location", text="Location")
         self.layout.prop(props, "prop_drone_rotation", text="Rotation")
         self.layout.prop(props, "prop_drone_dimension", text="Dimension")
-        self.layout.prop(props, "prop_drone_address", text="Address")
+
+        row = self.layout.row()
+        row.label(text="Beacon address")
+        row.prop(props, "prop_drone_address_left", text="Left")
+        row.prop(props, "prop_drone_address_right", text="Right")
+
         self.layout.prop(props, "prop_drone_server_address", text="Server address")
         self.layout.prop(props, "prop_drone_server_port", text="Server port")
         self.layout.prop(props, "prop_drone_client_address", text="Client address")

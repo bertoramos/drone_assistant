@@ -7,7 +7,7 @@ from .pose import Pose
 
 class DroneModel(MeshModel):
 
-    def __init__(self, mesh_id: str, pose: Pose, collider_id: str, note_id: str, address: int, server_address: str, server_port: int, client_address: str, client_port: int):
+    def __init__(self, mesh_id: str, pose: Pose, collider_id: str, note_id: str, address: tuple, server_address: str, server_port: int, client_address: str, client_port: int):
         super().__init__(mesh_id, pose, collider_id, note_id)
         self.__address = address
         self.__server_address = server_address
