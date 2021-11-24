@@ -116,7 +116,7 @@ def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_nu
     collider_obj.location = sphere_obj.location
     collider_obj.dimensions = margin_dim
     collider_obj.scale = margin_scale
-
+    
     #collider_obj.parent = sphere_obj
     bpy.ops.object.select_all(action='DESELECT')
     sphere_obj.select_set(True)
@@ -125,7 +125,7 @@ def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_nu
     bpy.ops.object.parent_set(type='OBJECT', keep_transform=False)
 
     collider_obj.object_type = 'ROBOT_MARGIN'
-
+    
     collider_obj.hide_select = True
 
     # Añade un material translucido
@@ -334,7 +334,7 @@ class PlanModel:
 
         if drone_obj is None or collider_obj is None: return
 
-        # TODO: Mostrar progreso
+        
         dim = len(self.__plan)
         bpy.context.window_manager.progress_begin(0, 100)
         

@@ -115,7 +115,7 @@ class MarvelmindThread(StoppableThread):
     def run(self):
         logger = logging.getLogger("myblenderlog")
         logger.info("Marvelmind thread started")
-
+        
         while True:
             if self.stopped():
                 self.close_device()

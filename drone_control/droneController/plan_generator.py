@@ -427,7 +427,8 @@ class PlanGeneratorModalOperator(bpy.types.Operator):
                 item.name = planName
                 item.drone_name = droneID
 
-            context.area.tag_redraw()
+            if context.area is not None:
+                context.area.tag_redraw()
 
             # bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD', location=(p[0], p[1], p[2]))
             # context.object.scale = Vector((0.2, 0.2, 0.2))

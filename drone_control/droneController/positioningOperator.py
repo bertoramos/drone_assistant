@@ -30,7 +30,7 @@ def calculate_angle(b1, b2):
 
     dot_product = np.dot(perp_vector, x_vector)
     angle = np.arccos(dot_product)
-
+    
     if perp_vector[1] < 0:
         angle = 2*math.pi - angle
     
