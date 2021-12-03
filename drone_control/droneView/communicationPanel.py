@@ -19,7 +19,7 @@ class CommunicationPanel(bpy.types.Panel):
 
     def draw(self, context):
         self.layout.operator(ManualSimulationModalOperator.bl_idname)
-
+        
         button_txt = "Connect" if not PositioningSystemModalOperator.isRunning else "Disconnect"
         button_ico = "RESTRICT_INSTANCED_ON" if not PositioningSystemModalOperator.isRunning else "RESTRICT_INSTANCED_OFF"
         self.layout.operator(TogglePositioningSystemOperator.bl_idname, text=button_txt, icon=button_ico)

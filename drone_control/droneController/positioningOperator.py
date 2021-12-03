@@ -123,7 +123,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         rx = drone.pose.rotation.x
         ry = drone.pose.rotation.y
         rz = drone.pose.rotation.z
-
+        
         #last_trace = Buffer().get_last_trace()
         speed = 0
         
@@ -131,7 +131,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
             pos_left  = Vector((beacon_left.x, beacon_left.y, beacon_left.z))
             pos_right = Vector((beacon_right.x, beacon_right.y, beacon_right.z))
             pos_mid   = (pos_left + pos_right)/2
-
+            
             x, y, z = pos_mid.x, pos_mid.y, pos_mid.z
             angle = calculate_angle(beacon_left, beacon_right)
             if angle is not None:

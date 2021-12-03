@@ -102,7 +102,6 @@ def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_nu
     bpy.data.objects[sphere_id].location = location
     bpy.data.objects[axis_id].rotation_euler = rotation
 
-
     bpy.ops.mesh.primitive_cube_add(enter_editmode=False,
                                     align='WORLD',
                                     location=(0, 0, 0),
@@ -123,10 +122,13 @@ def create_cursor(location, rotation, dim, margin_dim, margin_scale, position_nu
     collider_obj.select_set(True)
     bpy.context.view_layer.objects.active = sphere_obj
     bpy.ops.object.parent_set(type='OBJECT', keep_transform=False)
-
+    
     collider_obj.object_type = 'ROBOT_MARGIN'
     
     collider_obj.hide_select = True
+
+    hidden = bpy.context.scene.robot_margin_hidden
+    collider_obj.hide_set(hidden)
 
     # Añade un material translucido
     if collider_obj.active_material is None:

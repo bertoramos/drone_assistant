@@ -421,7 +421,7 @@ class PlanGeneratorModalOperator(bpy.types.Operator):
                 plan.addPose(pose)
             sceneModel.PlanCollection().addPlan(plan)
 
-
+            
             if planName not in context.scene.plan_list:
                 item = context.scene.plan_list.add()
                 item.name = planName

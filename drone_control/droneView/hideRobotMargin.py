@@ -14,7 +14,7 @@ def hide(context):
 
 def show(context):
     for obj in bpy.data.objects:
-        if obj.object_type == "ROBOT_MARGIN" and not obj.parent.hide_get():
+        if obj.object_type == "ROBOT_MARGIN" and obj.parent is not None and not obj.parent.hide_get():
             obj.hide_set(False)
 
 class HideRobotMarginOperator(bpy.types.Operator):

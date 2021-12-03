@@ -71,6 +71,9 @@ def _create_drone_boxcollider(mesh_id, dimensions):
 
     collider_obj.hide_select = True
 
+    hidden = bpy.context.scene.robot_margin_hidden
+    collider_obj.hide_set(hidden)
+    
     return collider_obj.name_full
 
 def _load_drone_mesh(name, start_location, start_rotation, dimension):

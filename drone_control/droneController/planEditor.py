@@ -142,12 +142,12 @@ class PlanEditor(metaclass=Singleton):
 
         cursor_name = create_cursor(last_location, last_rotation, drone_obj.dimensions.copy(), collider_obj.dimensions.copy(), collider_obj.scale.copy(), position_num)
         self.__poses_mesh_names.append(cursor_name)
-
+        
         PlanValidatorOperator._new_cursor_detected(bpy.data.objects[cursor_name])
 
         bpy.context.view_layer.objects.active = bpy.data.objects[cursor_name]
         bpy.data.objects[cursor_name].select_set(True)
-
+    
     def removePose(self):
         # Elimina las poses seleccionadas en la escena
         obj_delete = [obj for obj in bpy.context.selected_objects if obj.name_full in self.__poses_mesh_names]
