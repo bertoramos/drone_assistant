@@ -3,7 +3,9 @@ from .serialization import Packet
 
 class AckPacket(Packet):
 
-    def __init__(self, pid, ackPid, status, ptype=1) -> None:
+    PTYPE = 1
+
+    def __init__(self, pid, ackPid, status, ptype=PTYPE) -> None:
         super().__init__(pid, ptype)
         self.__ackPid = ackPid
         self.__status = status
@@ -20,32 +22,11 @@ class AckPacket(Packet):
     ackPid = property(__getAckPid)
     status = property(__getStatus)
 
-class TracePacket(Packet):
-    def __init__(self, pid, yaw, pitch, roll, ptype=2) -> None:
-        super().__init__(pid, ptype)
-        self.__yaw = yaw
-        self.__pitch = pitch
-        self.__roll = roll
-    
-    def __iter__(self):
-        return iter([self.pid, self.ptype, self.__yaw, self.__pitch, self.__roll])
-    
-    def __getYaw(self):
-        return self.__yaw
-    
-    def __getPitch(self):
-        return self.__pitch
-    
-    def __getRoll(self):
-        return self.__roll
-    
-    yaw = property(__getYaw)
-    pitch = property(__getPitch)
-    roll = property(__getRoll)
-
 class ModePacket(Packet):
 
-    def __init__(self, pid, mode, ptype=3) -> None:
+    PTYPE = 2
+
+    def __init__(self, pid, mode, ptype=PTYPE) -> None:
         super().__init__(pid, ptype)
         self.__mode = mode
     
@@ -56,3 +37,31 @@ class ModePacket(Packet):
         return self.__mode
 
     mode = property(__getMode)
+
+
+class StartCapturePacket(Packet):
+
+    PTYPE = 3
+
+    def __init__(self, pid, captureTime, ptype=PTYPE) -> None:
+        super().__init__(pid, ptype)
+        self.__captureTime = captureTime
+    
+    def __iter__(self):
+        return iter([self.pid, self.ptype, self.__captureTime])
+
+    def __get_captureTime(self):
+        return self.__captureTime
+    
+    captureTime = property(__get_captureTime)
+
+class EndCapturePacket(Packet):
+
+    PTYPE = 4
+
+    def __init__(self, pid, ptype=PTYPE):
+        super().__init__(pid, ptype)
+    
+    def __iter__(self):
+        return iter([self.pid, self.ptype])
+

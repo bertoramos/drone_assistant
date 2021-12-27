@@ -68,8 +68,25 @@ class PositioningSystemModalOperator(bpy.types.Operator):
     
     def _begin_thread(self, dev, clientAddr, serverAddr):
         handler = MarvelmindHandler()
+        #handler.start(device=dev, verbose=True)
+        
+        if not ConnectionHandler().initialize(clientAddr, serverAddr):
+            print("Client socket cannot be open")
+            return False
+        
+        ConnectionHandler().start()
+        
+        if not ConnectionHandler().send_change_mode(1):
+            self.report({"INFO"}, "Server not available")
+            ConnectionHandler().stop()
+            return False
+        else:
+            print("Mode changed to 1")
+        
         handler.start(device=dev, verbose=True)
+
         return True
+
         #if not ConnectionHandler().initialize(clientAddr, serverAddr):
         #    print("Client socket cannot be open")
         #    handler.stop()
@@ -93,14 +110,13 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         # PositioningSystemModalOperator._marvelmind_thread.stop()
         # PositioningSystemModalOperator._marvelmind_thread.join()
         
-        #if not ConnectionHandler().send_change_mode(0):
-        #    print("Change mode not finished")
-        #else:
-        #    print("Mode changed to 0")
+        if not ConnectionHandler().send_change_mode(0):
+            print("Change mode not finished")
+        else:
+            print("Mode changed to 0")
         
-        handler = MarvelmindHandler()
-        handler.stop()
-        #ConnectionHandler().stop()
+        ConnectionHandler().stop()
+        MarvelmindHandler().stop()
     
     def cancel(self, context):
         print("Cancel")
@@ -184,8 +200,8 @@ class PositioningSystemModalOperator(bpy.types.Operator):
 
         drone = sceneModel.DronesCollection().getActive()
         
-        udp_clientAddr = ("192.168.0.24", 5558)
-        udp_serverAddr = ("192.168.0.16", 4445)
+        #udp_clientAddr = ("192.168.0.24", 5558)
+        #udp_serverAddr = ("192.168.0.16", 4445)
         udp_clientAddr = (drone.clientAddress, drone.clientPort)
         udp_serverAddr = (drone.serverAddress, drone.serverPort)
         

@@ -23,33 +23,8 @@ class AckPacketMsgPackSerialization(st.Serialization):
         Apply a deserialization method to unpack
         """
         assert len(list_packet) == 4, "Error: No valid ack packet"
-        assert list_packet[1] == 1, "Error: list_packet is not a ack packet"
+        assert list_packet[1] == datapacket.AckPacket.PTYPE, "Error: list_packet is not a ack packet"
         return datapacket.AckPacket(list_packet[0], list_packet[2], list_packet[3])
-
-class TracePacketMsgPackSerialization(st.Serialization):
-    """
-    Defines an algorithm to pack-unpack a packet
-    """
-
-    @staticmethod
-    def pack(packet):
-        """
-        Apply a serialization method to pack
-        """
-        assert type(packet) == datapacket.TracePacket, "Error : packet is not a TracePacket"
-        l = list(iter(packet))
-
-        return list(iter(packet))
-
-    @staticmethod
-    def unpack(list_packet):
-        """
-        Apply a deserialization method to unpack
-        """
-        assert len(list_packet) == 5, "Error: No valid trace packet"
-        assert list_packet[1] == 2, "Error: list_packet is not a trace packet"
-
-        return datapacket.TracePacket(list_packet[0], list_packet[2], list_packet[3], list_packet[4])
 
 class ModePacketMsgPackSerialization(st.Serialization):
 
@@ -63,17 +38,48 @@ class ModePacketMsgPackSerialization(st.Serialization):
     @staticmethod
     def unpack(list_packet):
         assert len(list_packet) == 3, "Error: No valid mode packet"
-        assert list_packet[1] == 3, "Error: list_packet is not a mode packet"
+        assert list_packet[1] == datapacket.ModePacket.PTYPE, "Error: list_packet is not a mode packet"
 
         return datapacket.ModePacket(list_packet[0], list_packet[2])
 
+class StartCapturePacketMsgPackSerialization(st.Serialization):
+
+    @staticmethod
+    def pack(packet):
+        assert type(packet) == datapacket.StartCapturePacket, "Error: packet is not a StartCapturePacket"
+        l = list(iter(packet))
+        return list(iter(packet))
+    
+    @staticmethod
+    def unpack(list_packet: list):
+        assert len(list_packet) == 3, "Error: No valid start capture packet"
+        assert list_packet[1] == datapacket.StartCapturePacket.PTYPE, "Error: list_packet is not a start capture packet"
+
+        return datapacket.StartCapturePacket(list_packet[0], list_packet[2])
+
+
+class EndCapturePacketMsgPackSerialization(st.Serialization):
+
+    @staticmethod
+    def pack(packet):
+        assert type(packet) == datapacket.EndCapturePacket, "Error: packet is not a EndCapturePacket"
+        l = list(iter(packet))
+        return list(iter(packet))
+    
+    @staticmethod
+    def unpack(list_packet: list):
+        assert len(list_packet) == 2, "Error: No valid end capture packet"
+        assert list_packet[1] == datapacket.EndCapturePacket.PTYPE, "Error: list_packet is not a end capture packet"
+
+        return datapacket.EndCapturePacket(list_packet[0])
 
 # { ptype : SerializationClass, ... }
 # choose_serialization.get(ptype) -> return: ptype pack/unpack method
 choose_serialization = {
-                        1: AckPacketMsgPackSerialization,
-                        2: TracePacketMsgPackSerialization,
-                        3: ModePacketMsgPackSerialization
+                        datapacket.AckPacket.PTYPE: AckPacketMsgPackSerialization,
+                        datapacket.ModePacket.PTYPE: ModePacketMsgPackSerialization,
+                        datapacket.StartCapturePacket.PTYPE: StartCapturePacketMsgPackSerialization,
+                        datapacket.EndCapturePacket.PTYPE: EndCapturePacketMsgPackSerialization
                         }
 
 class MsgPackSerializator(st.Serializator):
