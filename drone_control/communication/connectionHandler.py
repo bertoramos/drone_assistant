@@ -6,6 +6,7 @@ import time
 from drone_control.patternModel import Singleton
 from drone_control.patternModel.stopThread import StoppableThread
 from drone_control.utilsAlgorithm import FPSCounter
+from drone_control.sceneModel.dronesCollection import DronesCollection
 
 from . import msgpack_serialization as ms
 from . import datapacket as dp
@@ -107,7 +108,7 @@ class UDPServer(StoppableThread):
         
     def run(self):
 
-        # from drone_control.droneController import PositioningSystemModalOperator
+        from drone_control.droneController import PositioningSystemModalOperator
         
         MAX_TIMEOUT = 5
         no_recv_num = MAX_TIMEOUT
@@ -129,7 +130,7 @@ class UDPServer(StoppableThread):
                 #    if no_recv_num == 0:
                 #        break
         
-        # PositioningSystemModalOperator.isRunning = False
+        PositioningSystemModalOperator.isRunning = False
         
         try:
             self.__close_socket()
@@ -195,7 +196,15 @@ class ConnectionHandler(metaclass=Singleton):
     def send_start_capture(self, captureTime):
         Buffer().last_snt_pid += 1
         PID = Buffer().last_snt_pid
-        start_capture_packet = dp.StartCapturePacket(PID, captureTime)
+        activeDrone = DronesCollection().getActive()
+        dronePose = activeDrone.pose
+        
+        x = dronePose.location.x
+        y = dronePose.location.y
+        z = dronePose.location.z
+        yaw = dronePose.rotation.z
+
+        start_capture_packet = dp.StartCapturePacket(PID, captureTime, x, y, z, yaw)
         self.send(start_capture_packet)
         print("Sent : ", list(iter(start_capture_packet)))
         return self.receive_ack_packet(PID)

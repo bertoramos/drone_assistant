@@ -52,10 +52,10 @@ class StartCapturePacketMsgPackSerialization(st.Serialization):
     
     @staticmethod
     def unpack(list_packet: list):
-        assert len(list_packet) == 3, "Error: No valid start capture packet"
+        assert len(list_packet) == 7, "Error: No valid start capture packet"
         assert list_packet[1] == datapacket.StartCapturePacket.PTYPE, "Error: list_packet is not a start capture packet"
 
-        return datapacket.StartCapturePacket(list_packet[0], list_packet[2])
+        return datapacket.StartCapturePacket(list_packet[0], list_packet[2], list_packet[3], list_packet[4], list_packet[5], list_packet[6])
 
 
 class EndCapturePacketMsgPackSerialization(st.Serialization):
