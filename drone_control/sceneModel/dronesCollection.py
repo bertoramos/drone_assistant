@@ -53,5 +53,8 @@ class DronesCollection(metaclass=Singleton):
         else:
             self.__n = -1
             raise StopIteration
+    
+    def __contains__(self, planID: str):
+        return planID in self.__droneDict
 
     activeDrone = property(fget=getActive, fset=setActive)

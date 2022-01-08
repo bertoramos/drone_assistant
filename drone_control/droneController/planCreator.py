@@ -2,6 +2,12 @@
 import bpy
 import logging
 
+import os
+import json
+import pathlib
+
+from bpy_extras.io_utils import ExportHelper
+
 from drone_control import sceneModel
 
 from .planEditor import PlanEditor
@@ -360,6 +366,181 @@ class DesactivePlanOperator(bpy.types.Operator):
         context.area.tag_redraw()
         return {'FINISHED'}
 
+
+################################################################################
+
+def export_plan(path, name, data_poses):
+    if not os.access(path, os.W_OK):
+        return False
+
+    with open(path / name, 'w') as outfile:
+        try:
+            json.dump(data_poses, outfile)
+            return True
+        except Exception as ex:
+            print(ex)
+            return False
+
+def read_plan(path, name):
+    if not (path / name).is_file():
+        return None
+
+    with open(path / name, 'r') as outfile:
+        data = json.load(outfile)
+        return data
+    return None
+
+class ExportPlanOperator(bpy.types.Operator, ExportHelper):
+    bl_idname = "wm.export_plan_operator"
+    bl_label = "Export"
+    bl_description = "Export plan"
+
+    filename_ext = ".json"
+
+    filter_glob: bpy.props.StringProperty(
+        default="*.json",
+        options={'HIDDEN'}
+    )
+
+    @classmethod
+    def poll(cls, context):
+        return not PlanEditor().isActive and \
+                len(sceneModel.PlanCollection()) > 0 and \
+                not manualSimulationControl.ManualSimulationModalOperator.isRunning and \
+                not utilsAlgorithm.MarvelmindHandler().isRunning()
+
+    def execute(self, context):
+        plan_list = context.scene.plan_list
+        plan_index = context.scene.plan_list_index
+
+        if not 0 <= plan_index < len(plan_list):
+            self.report({"ERROR"}, "No plan selected to modify")
+            return {'FINISHED'}
+
+        item = plan_list[plan_index]
+        name = item.name
+        drone_name = item.drone_name
+
+        drone = sceneModel.DronesCollection().get(drone_name)
+        if drone is None:
+            self.report({'INFO'}, f"{drone_name} not exists")
+            return {'FINISHED'}
+        
+        plan = sceneModel.PlanCollection().getPlan(name)
+        if plan is None:
+            self.report({'INFO'}, f"{name} not exists")
+            return {'FINISHED'}
+        
+        
+        poses = []
+        for p in list(iter(plan)):
+            x = p.location.x
+            y = p.location.y
+            z = p.location.z
+            rx = p.rotation.x
+            ry = p.rotation.y
+            rz = p.rotation.z
+            poses.append([x, y, z, rx, ry, rz])
+        
+        """
+        drone.address = (12, 13)
+        drone.serverAddress = '192.168.0.16'
+        drone.serverPort = 4445
+        drone.clientAddress = '192.168.0.24'
+        drone.clientPort = 5558
+        """
+        drone_mesh = bpy.data.objects[drone.meshID]
+        drone_collider = bpy.data.objects[drone.colliderID]
+
+        drone_pose = drone.pose
+
+        data_poses = {
+            'poses': poses,
+            'drone': {
+                'pose': [drone_pose.location.x, drone_pose.location.y, drone_pose.location.z, drone_pose.rotation.x, drone_pose.rotation.y, drone_pose.rotation.z],
+                'dimension': [drone_collider.dimensions.x, drone_collider.dimensions.y, drone_collider.dimensions.z],
+                'left_beacon_address': drone.address[0],
+                'right_beacon_address': drone.address[1],
+                'server_address': drone.serverAddress,
+                'server_port': drone.serverPort,
+                'client_address': drone.clientAddress,
+                'client_port': drone.clientPort
+            }
+        }
+
+        filepath_str = self.filepath
+        filepath = pathlib.Path(filepath_str)
+        path = filepath.parent
+        name = pathlib.Path(filepath.name)
+
+        if not export_plan(path, name, data_poses):
+            self.report({'ERROR'}, f"Cannot write in {str(path / name)}")
+        else:
+            self.report({'INFO'}, f"Exported path in {str(path / name)}")
+
+        return {'FINISHED'}
+
+
+class ImportPlanOperator(bpy.types.Operator, ExportHelper):
+    bl_idname = "wm.import_plan_operator"
+    bl_label = "Import"
+    bl_description = "Import plan"
+
+    filename_ext = ".json"
+
+    filter_glob: bpy.props.StringProperty(
+        default="*.json",
+        options={'HIDDEN'}
+    )
+
+    new_plan_name : bpy.props.StringProperty(name="Plan name")
+    new_drone_name : bpy.props.StringProperty(name="Drone name")
+
+    def draw(self, context):
+        self.layout.prop(self, "new_plan_name")
+        self.layout.prop(self, "new_drone_name")
+
+    @classmethod
+    def poll(cls, context):
+        return not manualSimulationControl.ManualSimulationModalOperator.isRunning and \
+                not utilsAlgorithm.MarvelmindHandler().isRunning()
+
+    def execute(self, context):
+        filepath_str = self.filepath
+        filepath = pathlib.Path(filepath_str)
+        path = filepath.parent
+        name = pathlib.Path(filepath.name)
+
+        context.area.tag_redraw()
+
+        plan_name = self.new_plan_name
+        drone_name = self.new_drone_name
+
+        if plan_name == "":
+            self.report({"ERROR"}, "No name has been given to the new plan")
+            return {'FINISHED'}
+        if drone_name == "":
+            self.report({"ERROR"}, "No name has been given to the new drone")
+            return {'FINISHED'}
+
+        if plan_name in sceneModel.PlanCollection() and drone_name in sceneModel.DronesCollection():
+            self.report({'ERROR'}, f"Plan {plan_name} and drone {drone_name} already exist")
+            return {'FINISHED'}
+        if plan_name in sceneModel.PlanCollection():
+            self.report({"ERROR"}, f"Plan {plan_name} already exists")
+            return {'FINISHED'}
+        if drone_name in sceneModel.DronesCollection():
+            self.report({"ERROR"}, f"Drone {drone_name} already exists")
+            return {'FINISHED'}
+        
+        if ( json_poses := read_plan(path, name) ) is None:
+            self.report({'ERROR'}, f"Cannot read {str(path / name)}")
+        else:
+            self.report({'INFO'}, f"Path loaded from {str(path / name)}")
+
+        print(json_poses)
+
+        return {'FINISHED'}
 
 ################################################################################
 
