@@ -1,6 +1,7 @@
 
 import bpy
 import logging
+from mathutils import Vector
 
 import os
 import json
@@ -14,6 +15,9 @@ from .planEditor import PlanEditor
 from .planValidator import PlanValidatorOperator
 from . import manualSimulationControl
 from drone_control import utilsAlgorithm
+
+
+
 
 def register():
     bpy.types.Scene.plan_list = bpy.props.CollectionProperty(type = PlanListItem)
@@ -516,6 +520,8 @@ class ImportPlanOperator(bpy.types.Operator, ExportHelper):
         plan_name = self.new_plan_name
         drone_name = self.new_drone_name
 
+        from .droneCreator import _add_drone_to_collection
+
         if plan_name == "":
             self.report({"ERROR"}, "No name has been given to the new plan")
             return {'FINISHED'}
@@ -539,6 +545,42 @@ class ImportPlanOperator(bpy.types.Operator, ExportHelper):
             self.report({'INFO'}, f"Path loaded from {str(path / name)}")
 
         print(json_poses)
+        pose = json_poses['drone']['pose']
+        dim = json_poses['drone']['dimension']
+        
+        xyz = Vector((pose[0], pose[1], pose[2]))
+        rot = Vector((pose[3], pose[4], pose[5]))
+        dimvec = Vector((dim[0], dim[1], dim[2]))
+
+        left_beacon = json_poses['drone']['left_beacon_address']
+        right_beacon = json_poses['drone']['right_beacon_address']
+        
+        server_addr = json_poses['drone']['server_address']
+        server_port = json_poses['drone']['server_port']
+        
+        client_addr = json_poses['drone']['client_address']
+        client_port = json_poses['drone']['client_port']
+
+        full_name = _add_drone_to_collection(drone_name, xyz, rot, dimvec, (left_beacon, right_beacon), server_addr, server_port, client_addr, client_port)
+        item = context.scene.drones_list.add()
+        item.drone_name = full_name
+
+        # CREATE PLAN
+        from .plan_generator import create_plan
+        points = json_poses['poses']
+        plan = sceneModel.PlanModel(plan_name, full_name)
+        for p in points:
+            new_pose = sceneModel.Pose(p[0], p[1], p[2], 0, 0, 0)
+            plan.addPose(new_pose)
+        sceneModel.PlanCollection().addPlan(plan)
+
+        if plan_name not in context.scene.plan_list:
+            item = context.scene.plan_list.add()
+            item.name = plan_name
+            item.drone_name = full_name
+        
+        if context.area is not None:
+            context.area.tag_redraw()
 
         return {'FINISHED'}
 

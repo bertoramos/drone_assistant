@@ -220,7 +220,7 @@ class CreateDroneOperator(bpy.types.Operator):
         address_right = context.scene.drone_props.prop_drone_address_right
         
         address = address_left, address_right
-
+        
         server_addr = context.scene.drone_props.prop_drone_server_address # "192.168.0.16"
         server_port = context.scene.drone_props.prop_drone_server_port # 4445
         client_addr = context.scene.drone_props.prop_drone_client_address # "192.168.0.24"
