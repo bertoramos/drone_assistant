@@ -2,6 +2,7 @@
 import bpy
 from mathutils import Vector
 import math
+import numpy as np
 
 from drone_control.patternModel.observerModel import Notifier, Observer
 from drone_control.sceneModel import DronesCollection, PlanCollection, DroneModel
@@ -321,21 +322,68 @@ class PlanControllerObserver(Observer):
                 del HUDWriterOperator._dashed_curve_3d[PLAN_EXECUTION_TRACKING]
         
         # Bearing
-        if len(self.__tracking) >= 2:
+        n_bearing_points = 5
+
+        def bearing_two_points():
             P = self.__tracking[-1].location
             Q = self.__tracking[-2].location
             P = Vector((P.x, P.y, P.z))
             Q = Vector((Q.x, Q.y, Q.z))
             v = (Q-P).normalized()
-            
+
             R = P - 0.25*v
-            
+
             if v.length > 0:
                 arrow = Arrow(Point3D(P.x, P.y, P.z), Point3D(R.x, R.y, R.z), head_len=0.05, head_size=0.02, color=self.__bearing_color)
                 HUDWriterOperator._arrows_3d[PLAN_EXECUTION_BEARING] = arrow
             else:
                 if PLAN_EXECUTION_BEARING in HUDWriterOperator._arrows_3d:
                     del HUDWriterOperator._arrows_3d[PLAN_EXECUTION_BEARING]
+        
+        def get_real_direction(approxvec, realvec):
+            inv_realvec = -realvec
+
+            a1 = Vector((approxvec[0], approxvec[1], approxvec[2])).angle(Vector((realvec[0],realvec[1],realvec[2])))#approxvec, realvec
+            a2 = Vector((approxvec[0], approxvec[1], approxvec[2])).angle(Vector((inv_realvec[0],inv_realvec[1],inv_realvec[2])))
+
+            if a1 < a2:
+                return realvec
+            else:
+                return inv_realvec
+
+        def bearing_multiple_points():
+            points = self.__tracking[-n_bearing_points:]
+            points = [e.location for e in points]
+            points = np.array([[p.x, p.y, p.z] for p in points]).T
+
+            D, V = np.linalg.eig(np.cov(points))
+            vec = V[:,D.argmax()]
+            approx_vec = points[:, 0] - points[:, -1]
+            approx_vec /= np.linalg.norm(approx_vec)
+            real_dir = get_real_direction(approx_vec, vec)
+
+            P = self.__tracking[-1].location
+            Q = P + Vector((real_dir[0], real_dir[1], real_dir[2]))
+            P = Vector((P.x, P.y, P.z))
+            Q = Vector((Q.x, Q.y, Q.z))
+            v = (Q-P).normalized()
+
+            R = P - 0.25*v
+
+            # TODO: Umbral donde se oculta el bearing
+
+            if v.length > 0:
+                arrow = Arrow(Point3D(P.x, P.y, P.z), Point3D(R.x, R.y, R.z), head_len=0.05, head_size=0.02, color=self.__bearing_color)
+                HUDWriterOperator._arrows_3d[PLAN_EXECUTION_BEARING] = arrow
+            else:
+                if PLAN_EXECUTION_BEARING in HUDWriterOperator._arrows_3d:
+                    del HUDWriterOperator._arrows_3d[PLAN_EXECUTION_BEARING]
+        
+        if len(self.__tracking) >= n_bearing_points:
+            if n_bearing_points == 2:
+                bearing_two_points()
+            else:
+                bearing_multiple_points()
         else:
             if PLAN_EXECUTION_BEARING in HUDWriterOperator._arrows_3d:
                 del HUDWriterOperator._arrows_3d[PLAN_EXECUTION_BEARING]
