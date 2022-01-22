@@ -50,9 +50,15 @@ def register():
     
     bpy.types.Scene.NPOSES_args = bpy.props.PointerProperty(type=NPOSESModeArgs)
 
+    bpy.types.Scene.marvelmind_num_points = bpy.props.IntProperty(name="marvelmind_num_points", min=2, max=20, default=5)
+    bpy.types.Scene.marvelmind_umbral = bpy.props.FloatProperty(name="marvelmind_umbral", min=0.0, default=0.0, precision=5)
+
 def unregister():
     del bpy.types.Scene.plan_show_mode
     del bpy.types.Scene.NPOSES_args
+
+    del bpy.types.Scene.marvelmind_num_points
+    del bpy.types.Scene.marvelmind_umbral
 
 class PlanControllerObserver(Observer):
 
@@ -322,7 +328,10 @@ class PlanControllerObserver(Observer):
                 del HUDWriterOperator._dashed_curve_3d[PLAN_EXECUTION_TRACKING]
         
         # Bearing
-        n_bearing_points = 5
+        n_bearing_points = bpy.context.scene.marvelmind_num_points
+        umbral = bpy.context.scene.marvelmind_umbral
+        #n_bearing_points = 5
+        #umbral = 0.01
 
         def bearing_two_points():
             P = self.__tracking[-1].location
@@ -333,7 +342,7 @@ class PlanControllerObserver(Observer):
 
             R = P - 0.25*v
 
-            if v.length > 0:
+            if v.length > 0 and (Q-P).length > umbral:
                 arrow = Arrow(Point3D(P.x, P.y, P.z), Point3D(R.x, R.y, R.z), head_len=0.05, head_size=0.02, color=self.__bearing_color)
                 HUDWriterOperator._arrows_3d[PLAN_EXECUTION_BEARING] = arrow
             else:
@@ -370,9 +379,9 @@ class PlanControllerObserver(Observer):
 
             R = P - 0.25*v
 
-            # TODO: Umbral donde se oculta el bearing
+            rankMaxValue = np.max(np.abs(points.max(axis=1) - points.min(axis=1)))
 
-            if v.length > 0:
+            if v.length > 0 and rankMaxValue > umbral:
                 arrow = Arrow(Point3D(P.x, P.y, P.z), Point3D(R.x, R.y, R.z), head_len=0.05, head_size=0.02, color=self.__bearing_color)
                 HUDWriterOperator._arrows_3d[PLAN_EXECUTION_BEARING] = arrow
             else:

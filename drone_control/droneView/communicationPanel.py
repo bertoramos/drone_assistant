@@ -26,6 +26,11 @@ class CommunicationPanel(bpy.types.Panel):
         self.layout.operator(TogglePositioningSystemOperator.bl_idname, text=button_txt, icon=button_ico)
         self.layout.operator(CalibrateOperator.bl_idname)
         self.layout.operator(DropAllStaticBeacons.bl_idname)
+
+        #if PositioningSystemModalOperator.isRunning:
+        box = self.layout.box()
+        box.prop(context.scene, "marvelmind_num_points", text="Num points")
+        box.prop(context.scene, "marvelmind_umbral", text="Umbral")
         
         button_txt = "Stop" if DroneMovementHandler().isPlanRunning() else "Play"
         button_ico = "SNAP_FACE" if DroneMovementHandler().isPlanRunning() else "PLAY"
