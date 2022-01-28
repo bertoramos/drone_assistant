@@ -26,8 +26,8 @@ class DroneMovementHandler(metaclass=Singleton):
                 self._positioning_observer = None
             
             if self._plan_control_observer is not None:
-                self._notifier.detach(self._positioning_observer)
-                self._positioning_observer = None
+                self._notifier.detach(self._plan_control_observer)
+                self._plan_control_observer = None
 
     def _attach_observer(self, observer):
         if self._notifier is not None:
