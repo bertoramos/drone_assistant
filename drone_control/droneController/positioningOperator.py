@@ -76,7 +76,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         
         ConnectionHandler().start()
         
-        if not ConnectionHandler().send_change_mode(1):
+        if not ConnectionHandler().send_change_mode(datapacket.ModePacket.CONNECT):
             self.report({"INFO"}, "Server not available")
             ConnectionHandler().stop()
             return False
@@ -110,7 +110,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         # PositioningSystemModalOperator._marvelmind_thread.stop()
         # PositioningSystemModalOperator._marvelmind_thread.join()
         
-        if not ConnectionHandler().send_change_mode(0):
+        if not ConnectionHandler().send_change_mode(datapacket.ModePacket.DISCONNECT):
             print("Change mode not finished")
         else:
             print("Mode changed to 0")

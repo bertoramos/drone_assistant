@@ -102,7 +102,7 @@ class UDPServer(StoppableThread):
             Buffer().last_snt_pid += 1
             pid = Buffer().last_snt_pid
             ack_pid = packet.pid
-            status = 0
+            status = dp.AckPacket.STATUS_OK
             ackpacket = dp.AckPacket(pid, ack_pid, status)
             self.send(ackpacket)
         

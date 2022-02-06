@@ -4,6 +4,8 @@ from .serialization import Packet
 class AckPacket(Packet):
 
     PTYPE = 1
+    
+    STATUS_OK = 0
 
     def __init__(self, pid, ackPid, status, ptype=PTYPE) -> None:
         super().__init__(pid, ptype)
@@ -25,6 +27,9 @@ class AckPacket(Packet):
 class ModePacket(Packet):
 
     PTYPE = 2
+
+    CONNECT = 1
+    DISCONNECT = 0
 
     def __init__(self, pid, mode, ptype=PTYPE) -> None:
         super().__init__(pid, ptype)
