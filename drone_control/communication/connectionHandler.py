@@ -123,7 +123,7 @@ class UDPServer(StoppableThread):
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 import traceback
-                print(traceback.format_exc())
+                #print(traceback.format_exc())
                 #print(e, type(e), "Line: ", exc_tb.tb_lineno, " ", fname, " ", exc_type)
                 #if type(e) == socket.timeout:
                 #    no_recv_num -=1

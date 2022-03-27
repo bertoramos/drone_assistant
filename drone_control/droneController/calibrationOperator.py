@@ -154,7 +154,7 @@ class CalibrateOperator(bpy.types.Operator):
         # data = cnh.ConnectionHandler().receive_calibration_data()
         start_time = time.time()
         wait_time = 10
-
+        
         stationary_beacons = MarvelmindHandler().getStationaryBeacons()
         while len(stationary_beacons) == 0 and abs(start_time - time.time()) < wait_time:
             stationary_beacons = MarvelmindHandler().getStationaryBeacons()

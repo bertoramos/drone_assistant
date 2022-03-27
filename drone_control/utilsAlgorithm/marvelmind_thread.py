@@ -88,7 +88,7 @@ class MarvelmindThread(StoppableThread):
             self.__beacons[address] = current_beacon
             txt += "[" + str(address) + " : " + str(xyz) + "] "
 
-        logger.info(txt)
+        #logger.info(txt)
         # if len(stationary_pos)>0: logger.info(txt)
     
 
@@ -130,14 +130,21 @@ class MarvelmindHandler(metaclass=Singleton):
     
     def start(self, device, verbose):
         if self.__thread is None:
+            self.dev = device
             self.__thread = MarvelmindThread(device=device, verbose=verbose)
             self.__thread.start()
     
+    #def join_thread(self):
+    #    if self.__thread is not None:
+    #        self.__thread.join_thread()
+
     def stop(self):
         if self.__thread is not None and not self.__thread.stopped():
             self.__thread.stop()
             self.__thread.join()
+            
             self.__thread = None
+            print("Stopped")
         else:
             raise Exception("Thread is not started")
     

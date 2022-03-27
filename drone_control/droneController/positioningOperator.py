@@ -57,7 +57,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
     def poll(cls, context):
         return sceneModel.dronesCollection.DronesCollection().getActive() is not None \
                and not PositioningSystemModalOperator.isRunning
-
+    
     def _observe_drone(self):
         DroneMovementHandler().init()
         DroneMovementHandler().start_positioning()
@@ -112,17 +112,21 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         
         if not ConnectionHandler().send_change_mode(datapacket.ModePacket.DISCONNECT):
             print("Change mode not finished")
+            return False
         else:
             print("Mode changed to 0")
         
         ConnectionHandler().stop()
         MarvelmindHandler().stop()
+        # MarvelmindHandler().join_thread()
+        
+        return True
     
     def cancel(self, context):
         print("Cancel")
         self._des_observe_drone()
 
-        self._end_thread()
+        return self._end_thread()
 
     def _move_drone(self):
         drone = sceneModel.DronesCollection().getActive()
@@ -178,7 +182,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
     def modal(self, context, event):
         if event.type == "TIMER":
             if not PositioningSystemModalOperator.isRunning:
-                self.cancel(context)
+                res = self.cancel(context)
                 return {'FINISHED'}
             
             DroneMovementHandler().autostop()
@@ -212,7 +216,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         
         wm = context.window_manager
         wm.modal_handler_add(self)
-        self._timer = wm.event_timer_add(0.03, window=context.window)
+        self._timer = wm.event_timer_add(0.1, window=context.window)
         
         PositioningSystemModalOperator.error_message = ""
 
