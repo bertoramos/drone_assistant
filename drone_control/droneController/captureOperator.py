@@ -16,7 +16,7 @@ class CaptureModalOperator(bpy.types.Operator):
     def poll(cls, context):
         from drone_control.droneController import PositioningSystemModalOperator
         isRunning = PositioningSystemModalOperator.isRunning
-        return not CaptureModalOperator._isCapturing #and isRunning # TODO: check if server is open
+        return not CaptureModalOperator._isCapturing and isRunning
 
     def modal(self, context, event):
         
@@ -27,6 +27,8 @@ class CaptureModalOperator(bpy.types.Operator):
 
                 if context.area is not None:
                     context.area.tag_redraw()
+                
+                self.report({'INFO'}, "Capture finished")
                 return {'FINISHED'}
         return {'PASS_THROUGH'}
     

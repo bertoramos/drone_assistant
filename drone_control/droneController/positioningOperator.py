@@ -68,7 +68,6 @@ class PositioningSystemModalOperator(bpy.types.Operator):
     
     def _begin_thread(self, dev, clientAddr, serverAddr):
         handler = MarvelmindHandler()
-        #handler.start(device=dev, verbose=True)
         
         if not ConnectionHandler().initialize(clientAddr, serverAddr):
             print("Client socket cannot be open")
@@ -86,32 +85,15 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         handler.start(device=dev, verbose=True)
 
         return True
-
-        #if not ConnectionHandler().initialize(clientAddr, serverAddr):
-        #    print("Client socket cannot be open")
-        #    handler.stop()
-        #    return False
-        #ConnectionHandler().start()
-        #
-        #if not ConnectionHandler().send_change_mode(1):
-        #    print("Change mode not finished: Server not available")
-        #    self.report({'INFO'}, 'Server not available')
-        #    ConnectionHandler().stop()
-        #    handler.stop()
-        #    return False
-        #else:
-        #    print("Mode changed to 1")
-        #    return True
-        
-        # PositioningSystemModalOperator._marvelmind_thread = MarvelmindThread(device=dev, verbose=True)
-        # PositioningSystemModalOperator._marvelmind_thread.start()
     
     def _end_thread(self):
-        # PositioningSystemModalOperator._marvelmind_thread.stop()
-        # PositioningSystemModalOperator._marvelmind_thread.join()
         
         if not ConnectionHandler().send_change_mode(datapacket.ModePacket.DISCONNECT):
             print("Change mode not finished")
+    
+            ConnectionHandler().stop()
+            MarvelmindHandler().stop()
+    
             return False
         else:
             print("Mode changed to 0")
@@ -125,15 +107,14 @@ class PositioningSystemModalOperator(bpy.types.Operator):
     def cancel(self, context):
         print("Cancel")
         self._des_observe_drone()
-
+        
         return self._end_thread()
 
     def _move_drone(self):
         drone = sceneModel.DronesCollection().getActive()
-
+        
         addr_left, addr_right = drone.address
-        # beacon = PositioningSystemModalOperator._marvelmind_thread.getBeacon(addr)
-
+        
         beacon_left = MarvelmindHandler().getBeacon(addr_left)
         beacon_right = MarvelmindHandler().getBeacon(addr_right)
         
@@ -144,7 +125,6 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         ry = drone.pose.rotation.y
         rz = drone.pose.rotation.z
         
-        #last_trace = Buffer().get_last_trace()
         speed = 0
         
         if beacon_left is not None and beacon_right is not None:
@@ -165,16 +145,6 @@ class PositioningSystemModalOperator(bpy.types.Operator):
             self.__all_beacons.append(beacon_right)
             speed = beacon_right.speed
         
-        #if last_trace is not None:
-        #    yaw, pitch, roll = last_trace.yaw, last_trace.pitch, last_trace.roll
-        #    init_rotation = Euler((0,0,0))
-        #    init_rotation.rotate_axis('Z', yaw)
-        #    init_rotation.rotate_axis('X', pitch)
-        #    init_rotation.rotate_axis('Y', roll)
-        #    #print(init_rotation)
-        #
-        #    rx, ry, rz = init_rotation.x, init_rotation.y, init_rotation.z
-        
         pose = sceneModel.Pose(x, y, z, rx, ry, rz)
         DroneMovementHandler().notifyAll(pose, speed)
         FPSCounter().notifyRender()
@@ -190,6 +160,9 @@ class PositioningSystemModalOperator(bpy.types.Operator):
             if PositioningSystemModalOperator.isRunning:
                 self._move_drone()
             
+            if ConnectionHandler().receive_close_server():
+                PositioningSystemModalOperator.isRunning = False
+        
         return {'PASS_THROUGH'}
 
     def execute(self, context):

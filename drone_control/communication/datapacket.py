@@ -91,3 +91,12 @@ class EndCapturePacket(Packet):
     def __iter__(self):
         return iter([self.pid, self.ptype])
 
+class CloseServerPacket(Packet):
+
+    PTYPE = 5
+
+    def __init__(self, pid, ptype=PTYPE):
+        super().__init__(pid, ptype)
+    
+    def __iter__(self):
+        return iter([self.pid, self.ptype])

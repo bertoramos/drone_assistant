@@ -73,13 +73,30 @@ class EndCapturePacketMsgPackSerialization(st.Serialization):
 
         return datapacket.EndCapturePacket(list_packet[0])
 
+
+class CloseServerPacketMsgPackSerialization(st.Serialization):
+
+    @staticmethod
+    def pack(packet):
+        assert type(packet) == datapacket.CloseServerPacket, "Error: packet is not a CloseServerPacket"
+        l = list(iter(packet))
+        return list(iter(packet))
+    
+    @staticmethod
+    def unpack(list_packet: list):
+        assert len(list_packet) == 2, "Error: No valid close server packet"
+        assert list_packet[1] == datapacket.CloseServerPacket.PTYPE, "Error: list_packet is not a close server packet"
+
+        return datapacket.CloseServerPacket(list_packet[0])
+
 # { ptype : SerializationClass, ... }
 # choose_serialization.get(ptype) -> return: ptype pack/unpack method
 choose_serialization = {
                         datapacket.AckPacket.PTYPE: AckPacketMsgPackSerialization,
                         datapacket.ModePacket.PTYPE: ModePacketMsgPackSerialization,
                         datapacket.StartCapturePacket.PTYPE: StartCapturePacketMsgPackSerialization,
-                        datapacket.EndCapturePacket.PTYPE: EndCapturePacketMsgPackSerialization
+                        datapacket.EndCapturePacket.PTYPE: EndCapturePacketMsgPackSerialization,
+                        datapacket.CloseServerPacket.PTYPE: CloseServerPacketMsgPackSerialization
                         }
 
 class MsgPackSerializator(st.Serializator):

@@ -49,6 +49,16 @@ class Buffer(metaclass=Singleton):
             self.__buffer.remove(ret_packet)
         return ret_packet
     
+    def receive_close_server(self):
+        ret_packet = None
+        for packet in self.__buffer:
+            if type(packet) == dp.CloseServerPacket:
+                ret_packet = packet
+                break
+        if ret_packet is not None:
+            self.__buffer.remove(ret_packet)
+        return ret_packet
+    
     def __iter__(self):
         return iter(self.__buffer)
 
@@ -56,7 +66,7 @@ buffersize = 4096
 
 class UDPServer(StoppableThread):
 
-    ack_packets = { dp.EndCapturePacket }
+    ack_packets = { dp.EndCapturePacket, dp.CloseServerPacket }
 
     def __init__(self, *args, **kwargs):
         self.__clientAddr = kwargs['clientAddr']
@@ -95,9 +105,9 @@ class UDPServer(StoppableThread):
     def __receive(self):
         msgFromServer, addr = self.__client_socket.recvfrom(buffersize)
         packet = ms.MsgPackSerializator.unpack(msgFromServer)
-        print("Received : ", list(iter(packet)))
+        #print("Received : ", list(iter(packet)))
         Buffer().set_packet(packet)
-
+        
         if type(packet) in UDPServer.ack_packets:
             Buffer().last_snt_pid += 1
             pid = Buffer().last_snt_pid
@@ -122,7 +132,7 @@ class UDPServer(StoppableThread):
                 import sys, os
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                import traceback
+                #import traceback
                 #print(traceback.format_exc())
                 #print(e, type(e), "Line: ", exc_tb.tb_lineno, " ", fname, " ", exc_type)
                 #if type(e) == socket.timeout:
@@ -211,4 +221,7 @@ class ConnectionHandler(metaclass=Singleton):
     
     def receive_end_capture(self):
         return Buffer().receive_end_capture() is not None
+    
+    def receive_close_server(self):
+        return Buffer().receive_close_server() is not None
 

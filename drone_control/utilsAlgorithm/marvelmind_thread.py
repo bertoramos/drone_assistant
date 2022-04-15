@@ -132,12 +132,9 @@ class MarvelmindHandler(metaclass=Singleton):
         if self.__thread is None:
             self.dev = device
             self.__thread = MarvelmindThread(device=device, verbose=verbose)
+            self.__thread.setDaemon(True)
             self.__thread.start()
     
-    #def join_thread(self):
-    #    if self.__thread is not None:
-    #        self.__thread.join_thread()
-
     def stop(self):
         if self.__thread is not None and not self.__thread.stopped():
             self.__thread.stop()
