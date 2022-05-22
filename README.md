@@ -30,7 +30,7 @@
 <h3 align="center">Drone assistant</h3>
 
   <p align="center">
-    project_description
+    Blender addon for drone flight assistance
     <br />
     <a href="https://github.com/bertoramos/drone_assistant"><strong>Explore the docs »</strong></a>
     <br />
