@@ -64,11 +64,7 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
 
@@ -93,7 +89,6 @@ Drone Assistant is a Blender Addon to give instructions to a drone pilot on how 
 * [Blender Development VSC extension](https://marketplace.visualstudio.com/items?itemName=JacquesLucke.blender-development)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
-
 
 
 <!-- GETTING STARTED -->
@@ -176,6 +171,22 @@ To get a local copy up and running follow these simple example steps.
    const API_KEY = 'ENTER YOUR API';
    ```
 -->
+
+### Debugging
+
+1. Follow steps 1 to 4 in the installation section. 
+
+2. In step 5, install only the *Utilities* addon.
+
+3. Install [Visual Studio Code](https://code.visualstudio.com/) and [Blender Development VSC extension](https://marketplace.visualstudio.com/items?itemName=JacquesLucke.blender-development).
+
+4. Open in VSC the *drone_addon* folder.
+
+5. Press CTRL + SHIFT + P, type Blender:Start and press Enter.
+
+6. Select the executable and wait for Blender to open with the addon loaded.
+
+7. After modify code, reload code using *Blender: Reload Addons*. You can also close and reopen Blender by following steps 5 and 6.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
