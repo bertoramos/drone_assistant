@@ -52,10 +52,10 @@ class StartCapturePacketMsgPackSerialization(st.Serialization):
     
     @staticmethod
     def unpack(list_packet: list):
-        assert len(list_packet) == 7, "Error: No valid start capture packet"
+        assert len(list_packet) == 2, "Error: No valid start capture packet"
         assert list_packet[1] == datapacket.StartCapturePacket.PTYPE, "Error: list_packet is not a start capture packet"
 
-        return datapacket.StartCapturePacket(list_packet[0], list_packet[2], list_packet[3], list_packet[4], list_packet[5], list_packet[6])
+        return datapacket.StartCapturePacket(list_packet[0])
 
 
 class EndCapturePacketMsgPackSerialization(st.Serialization):
@@ -89,6 +89,22 @@ class CloseServerPacketMsgPackSerialization(st.Serialization):
 
         return datapacket.CloseServerPacket(list_packet[0])
 
+
+class PosePacketMsgPackSerialization(st.Serialization):
+
+    @staticmethod
+    def pack(packet):
+        assert type(packet) == datapacket.PosePacket, "Error: packet is not a PosePacket"
+        return list(iter(packet))
+    
+    @staticmethod
+    def unpack(list_packet: list):
+        assert len(list_packet) == 7, "Error: No valid pose packet"
+        assert list_packet[1] == datapacket.PosePacket.PTYPE, "Error: list_packet is not a pose packet"
+
+        return datapacket.PosePacket(list_packet[0])
+
+
 # { ptype : SerializationClass, ... }
 # choose_serialization.get(ptype) -> return: ptype pack/unpack method
 choose_serialization = {
@@ -96,7 +112,8 @@ choose_serialization = {
                         datapacket.ModePacket.PTYPE: ModePacketMsgPackSerialization,
                         datapacket.StartCapturePacket.PTYPE: StartCapturePacketMsgPackSerialization,
                         datapacket.EndCapturePacket.PTYPE: EndCapturePacketMsgPackSerialization,
-                        datapacket.CloseServerPacket.PTYPE: CloseServerPacketMsgPackSerialization
+                        datapacket.CloseServerPacket.PTYPE: CloseServerPacketMsgPackSerialization,
+                        datapacket.PosePacket.PTYPE: PosePacketMsgPackSerialization
                         }
 
 class MsgPackSerializator(st.Serializator):

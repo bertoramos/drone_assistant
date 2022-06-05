@@ -8,7 +8,7 @@ from drone_control.droneController import (
                     TogglePlanOperator,
                     DroneMovementHandler,
                     ManualSimulationModalOperator,
-                    CaptureModalOperator
+                    ToggleCaptureOperator
 )
 
 class CommunicationPanel(bpy.types.Panel):
@@ -36,4 +36,6 @@ class CommunicationPanel(bpy.types.Panel):
         button_ico = "SNAP_FACE" if DroneMovementHandler().isPlanRunning() else "PLAY"
         self.layout.operator(TogglePlanOperator.bl_idname, text=button_txt, icon=button_ico)
 
-        self.layout.operator(CaptureModalOperator.bl_idname, text="Capture")
+        #self.layout.operator(CaptureModalOperator.bl_idname, text="Capture")
+        txt_file = ("Start" if not ToggleCaptureOperator.isCapturing else "Stop") + " capture"
+        self.layout.operator(ToggleCaptureOperator.bl_idname, text=txt_file)

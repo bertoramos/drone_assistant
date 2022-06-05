@@ -31,4 +31,6 @@ from .droneMovementHandler import DroneMovementHandler
 
 from .plan_generator import PlanGeneratorModalOperator
 
-from .captureOperator import CaptureModalOperator
+#from .captureOperator import CaptureModalOperator
+
+from .captureOperator import ToggleCaptureOperator

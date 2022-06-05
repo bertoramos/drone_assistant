@@ -6,11 +6,11 @@ from bpy.props import StringProperty
 
 import sys
 
-DEFAULT_PORT = "COM4" if sys.platform=="win32" else "/dev/ttyACM0"
+DEFAULT_PORT = "COM3" if sys.platform=="win32" else "/dev/ttyACM0"
 
 def register():
     global DEFAULT_PORT
-    DEFAULT_PORT = "COM4" if sys.platform=="win32" else "/dev/ttyACM0"
+    DEFAULT_PORT = "COM3" if sys.platform=="win32" else "/dev/ttyACM0"
 
     bpy.types.Scene.prop_marvelmind_port = StringProperty(
         name="Marvelmind port",
@@ -31,7 +31,7 @@ def set_port(self, value):
     print(osname, port, value, ospatt.match(port), ospatt)
     print(self.keys())
     if ospatt.match(port) is None:
-        port = "COM4" if osname == "win32" else "/dev/ttyACM0"
+        port = "COM3" if osname == "win32" else "/dev/ttyACM0"
         self['prop_marvelmind_port'] = port
         return
     self['prop_marvelmind_port'] = value

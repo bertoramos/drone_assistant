@@ -9,12 +9,14 @@ from .fps_counter import FPSCounter
 from mathutils import Vector
 
 import logging
+import time
 
 @dataclass
 class Beacon:
     address: int
 
     timestamp: float
+    timestamp_pos: int
 
     x: float
     y: float
@@ -49,12 +51,14 @@ class MarvelmindThread(StoppableThread):
 
         if len(mobile_pos) > 0:
             FPSCounter().notifyPositionChange()
-
+        
         txt = "Get mobile beacon data : "
         for address, xyz in mobile_pos.items():
+            timestamp_pos = int(time.time()*1000)
             
             current_beacon = Beacon(address,
                                     xyz[0],
+                                    timestamp_pos,
                                     xyz[1], xyz[2], xyz[3], 
                                     xyz[4],
                                     False)
@@ -75,12 +79,15 @@ class MarvelmindThread(StoppableThread):
             
             self.__beacons[address] = current_beacon
             txt += "[" + str(address) + " : " + str(xyz) + "] "
-        # if len(mobile_pos) > 0: logger.info(txt)
+        #if len(mobile_pos) > 0: logger.info(txt)
         
         txt = "Get stationary beacon data : "
         for address, xyz in stationary_pos.items():
+            timestamp_pos = int(time.time()*1000)
+            
             current_beacon = Beacon(address,
                                     0,
+                                    timestamp_pos,
                                     xyz[0], xyz[1], xyz[2], 
                                     0,
                                     True)
@@ -143,25 +150,25 @@ class MarvelmindHandler(metaclass=Singleton):
             self.__thread = None
             print("Stopped")
         else:
-            raise Exception("Thread is not started")
+            raise Exception("Thread is not started (stop)")
     
     def getBeacon(self, address):
         if self.__thread is not None:
             return self.__thread.getBeacon(address=address)
         else:
-            raise Exception("Thread is not started")
+            raise Exception("Thread is not started (getBeacon)")
     
     def getAll(self):
         if self.__thread is not None:
             return self.__thread.getAll()
         else:
-            raise Exception("Thread is not started")
+            raise Exception("Thread is not started (getAll)")
     
     def getStationaryBeacons(self):
         if self.__thread is not None:
             return self.__thread.getStationaryBeacons()
         else:
-            raise Exception("Thread is not started")
+            raise Exception("Thread is not started (getStationaryBeacons)")
     
     def isRunning(self):
         return self.__thread is not None

@@ -3,6 +3,37 @@ import bpy
 
 from drone_control.communication import Buffer, ConnectionHandler
 
+class ToggleCaptureOperator(bpy.types.Operator):
+    bl_idname = "scene.toggle_capture"
+    bl_label  = "Start capture"
+
+    isCapturing = False
+
+    @classmethod
+    def poll(cls, context):
+        from drone_control.droneController import PositioningSystemModalOperator
+        isRunning = PositioningSystemModalOperator.isRunning
+        return isRunning
+    
+    def start_capture(self, context):
+        if ConnectionHandler().send_start_capture():
+            ToggleCaptureOperator.isCapturing = True
+
+    def stop_capture(self, context):
+        if ConnectionHandler().send_stop_capture():
+            ToggleCaptureOperator.isCapturing = False
+    
+    def execute(self, context):
+        if not ToggleCaptureOperator.isCapturing:
+            self.start_capture(context)
+        else:
+            self.stop_capture(context)
+        
+        print("Hello ", ToggleCaptureOperator.isCapturing)
+        return {'FINISHED'}
+
+
+"""
 class CaptureModalOperator(bpy.types.Operator):
     bl_idname = "scene.capture_modal_operator"
     bl_label = "Capture Operator"
@@ -59,3 +90,4 @@ class CaptureModalOperator(bpy.types.Operator):
     def invoke(self, context, event):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
+"""

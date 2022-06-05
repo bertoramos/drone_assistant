@@ -66,7 +66,7 @@ buffersize = 4096
 
 class UDPServer(StoppableThread):
 
-    ack_packets = { dp.EndCapturePacket, dp.CloseServerPacket }
+    ack_packets = { dp.CloseServerPacket }
 
     def __init__(self, *args, **kwargs):
         self.__clientAddr = kwargs['clientAddr']
@@ -203,25 +203,36 @@ class ConnectionHandler(metaclass=Singleton):
         print("Sent : ", list(iter(mode_packet)))
         return self.receive_ack_packet(PID)
     
-    def send_start_capture(self, captureTime):
+    def send_start_capture(self):
         Buffer().last_snt_pid += 1
         PID = Buffer().last_snt_pid
-        activeDrone = DronesCollection().getActive()
-        dronePose = activeDrone.pose
-        
-        x = dronePose.location.x
-        y = dronePose.location.y
-        z = dronePose.location.z
-        yaw = dronePose.rotation.z
 
-        start_capture_packet = dp.StartCapturePacket(PID, captureTime, x, y, z, yaw)
+        start_capture_packet = dp.StartCapturePacket(PID)
         self.send(start_capture_packet)
+        
         print("Sent : ", list(iter(start_capture_packet)))
+        
         return self.receive_ack_packet(PID)
     
-    def receive_end_capture(self):
-        return Buffer().receive_end_capture() is not None
+    def send_stop_capture(self):
+        Buffer().last_snt_pid += 1
+        PID = Buffer().last_snt_pid
+
+        end_capture_packet = dp.EndCapturePacket(PID)
+        self.send(end_capture_packet)
+        
+        print("Sent : ", list(iter(end_capture_packet)))
+        
+        return self.receive_ack_packet(PID)
     
     def receive_close_server(self):
         return Buffer().receive_close_server() is not None
+    
+    def send_pose(self, timestamp, x, y, z, yaw):
+        Buffer().last_snt_pid += 1
+        PID = Buffer().last_snt_pid
 
+        pose_packet = dp.PosePacket(PID, timestamp, x, y, z, yaw)
+        self.send(pose_packet)
+
+        return True

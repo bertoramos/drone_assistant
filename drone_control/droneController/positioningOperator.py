@@ -13,6 +13,8 @@ from drone_control.communication import datapacket
 
 from drone_control.utilsAlgorithm import FPSCounter
 
+from drone_control.communication.poseSender import PoseSenderThread
+
 import numpy as np
 import math
 
@@ -49,6 +51,8 @@ class PositioningSystemModalOperator(bpy.types.Operator):
 
     __all_beacons = []
 
+    _poseSender = None
+
 
     def check(self, context):
         return True
@@ -84,6 +88,9 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         
         handler.start(device=dev, verbose=True)
 
+        PositioningSystemModalOperator._poseSender = PoseSenderThread()
+        PositioningSystemModalOperator._poseSender.start()
+
         return True
     
     def _end_thread(self):
@@ -93,11 +100,16 @@ class PositioningSystemModalOperator(bpy.types.Operator):
     
             ConnectionHandler().stop()
             MarvelmindHandler().stop()
-    
+            PositioningSystemModalOperator._poseSender.stop()
+            PositioningSystemModalOperator._poseSender.join()
+            
             return False
         else:
             print("Mode changed to 0")
         
+        PositioningSystemModalOperator._poseSender.stop()
+        PositioningSystemModalOperator._poseSender.join()
+
         ConnectionHandler().stop()
         MarvelmindHandler().stop()
         # MarvelmindHandler().join_thread()
