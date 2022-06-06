@@ -351,9 +351,18 @@ class PlanControllerObserver(Observer):
         
         def get_real_direction(approxvec, realvec):
             inv_realvec = -realvec
-
-            a1 = Vector((approxvec[0], approxvec[1], approxvec[2])).angle(Vector((realvec[0],realvec[1],realvec[2])))#approxvec, realvec
-            a2 = Vector((approxvec[0], approxvec[1], approxvec[2])).angle(Vector((inv_realvec[0],inv_realvec[1],inv_realvec[2])))
+            v1 = Vector((realvec[0],realvec[1],realvec[2]))
+            v2 = Vector((inv_realvec[0],inv_realvec[1],inv_realvec[2]))
+            aprox_vec = Vector((approxvec[0], approxvec[1], approxvec[2]))
+            if aprox_vec.length > 0 and v1.length > 0:
+                a1 = aprox_vec.angle(v1)#approxvec, realvec
+            else:
+                a1 = 0
+            
+            if aprox_vec.length > 0 and v2.length > 0:
+                a2 = aprox_vec.angle(v2)
+            else:
+                a2 = 0
 
             if a1 < a2:
                 return realvec
@@ -368,7 +377,7 @@ class PlanControllerObserver(Observer):
             D, V = np.linalg.eig(np.cov(points))
             vec = V[:,D.argmax()]
             approx_vec = points[:, 0] - points[:, -1]
-            approx_vec /= np.linalg.norm(approx_vec)
+            approx_vec /= (np.linalg.norm(approx_vec)+1e-10)
             real_dir = get_real_direction(approx_vec, vec)
 
             P = self.__tracking[-1].location
