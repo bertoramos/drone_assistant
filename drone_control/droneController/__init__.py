@@ -3,6 +3,7 @@ from .droneControlObserver import ( DroneMovementNotifier,
 
 from .droneCreator import ( CreateDroneOperator,
                             RemoveDroneOperator,
+                            ModifyDroneOperator,
                             SelectActiveDroneOperator,
                             UnselectActiveDroneOperator,
                             LIST_OT_DroneMoveItem )

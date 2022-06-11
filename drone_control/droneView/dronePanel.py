@@ -30,6 +30,7 @@ class DroneListPanel(bpy.types.Panel):
 
         drone_management_ops = [(droneController.droneCreator.CreateDroneOperator.bl_idname, "PLUS"),
                                 (droneController.droneCreator.RemoveDroneOperator.bl_idname, "X"),
+                                (droneController.droneCreator.ModifyDroneOperator.bl_idname, "GREASEPENCIL"),
                                 (droneController.droneCreator.SelectActiveDroneOperator.bl_idname, "RESTRICT_SELECT_OFF"),
                                 (droneController.droneCreator.UnselectActiveDroneOperator.bl_idname, "RESTRICT_SELECT_ON")]
         
@@ -37,3 +38,5 @@ class DroneListPanel(bpy.types.Panel):
             row2.operator(idname, icon=icon)
         row2.operator(droneController.droneCreator.LIST_OT_DroneMoveItem.bl_idname, text='', icon="TRIA_UP").direction = 'UP'
         row2.operator(droneController.droneCreator.LIST_OT_DroneMoveItem.bl_idname, text='', icon="TRIA_DOWN").direction = 'DOWN'
+
+        layout.operator(droneController.droneCreator.DisplayDroneInfoOperator.bl_idname, text='', icon="INFO")

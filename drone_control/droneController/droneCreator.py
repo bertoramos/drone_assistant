@@ -186,7 +186,7 @@ class LIST_UL_Drone(bpy.types.UIList):
             layout.label(text="", icon = custom_icon)
 
 class DroneProps(bpy.types.PropertyGroup):
-    prop_drone_name: bpy.props.StringProperty(name="Name", description="Drone name",default="Drone", maxlen=20)
+    prop_drone_name: bpy.props.StringProperty(name="Name", description="Drone name", default="Drone", maxlen=20)
     prop_drone_location: bpy.props.FloatVectorProperty(name="Location", description="Initial drone location", default=(0.0, 0.0, 0.0), subtype='XYZ', size=3)
     prop_drone_rotation: bpy.props.FloatVectorProperty(name="Rotation", description="Initial drone rotation", default=(0.0, 0.0, 0.0), subtype='XYZ', size=3)
     prop_drone_dimension: bpy.props.FloatVectorProperty(name="Dimension", description="Dimension drone ", default=(0.5, 0.5, 0.5), min=0.0, subtype='XYZ', size=3)
@@ -402,6 +402,181 @@ class UnselectActiveDroneOperator(bpy.types.Operator):
     def execute(self, context):
         sceneModel.dronesCollection.DronesCollection().unsetActive()
         return {'FINISHED'}
+
+
+class DisplayDroneInfoOperator(bpy.types.Operator):
+    """Display drone info operator"""
+    bl_idname = "scene.display_drone_info_operator"
+    bl_label = "Drone information"
+    bl_description = "Display drone information"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return len(sceneModel.DronesCollection()) > 0
+    
+    def execute(self, context):
+        return {'FINISHED'}
+    
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self, context):
+        name = context.scene.drone_props.prop_drone_name
+        location = context.scene.drone_props.prop_drone_location
+        rotation = context.scene.drone_props.prop_drone_rotation
+        dimension = context.scene.drone_props.prop_drone_dimension
+
+        address_left = context.scene.drone_props.prop_drone_address_left
+        address_right = context.scene.drone_props.prop_drone_address_right
+                
+        server_addr = context.scene.drone_props.prop_drone_server_address # "192.168.0.16"
+        server_port = context.scene.drone_props.prop_drone_server_port # 4445
+        client_addr = context.scene.drone_props.prop_drone_client_address # "192.168.0.24"
+        client_port = context.scene.drone_props.prop_drone_client_port # 5558
+
+        self.layout.label(text=f"Name : {name}")
+        
+        self.layout.label(text=f"Pose:")
+        
+        x_txt = f"{location.x:0.3f}".rstrip('0').rstrip('.')
+        y_txt = f"{location.y:0.3f}".rstrip('0').rstrip('.')
+        z_txt = f"{location.z:0.3f}".rstrip('0').rstrip('.')
+        rx_txt = f"{rotation.x:0.2f}".rstrip('0').rstrip('.')
+        ry_txt = f"{rotation.y:0.2f}".rstrip('0').rstrip('.')
+        rz_txt = f"{rotation.z:0.2f}".rstrip('0').rstrip('.')
+        
+        box = self.layout.box()
+        row = box.row()
+        row.label(text="Location <X; Y; Z>")
+        row.label(text=f"<{x_txt}; {y_txt}; {z_txt}> m")
+        
+        row = box.row()
+        row.label(text="Rotation <X; Y; Z>")
+        row.label(text=f"<{rx_txt}; {ry_txt}; {rz_txt}> °")
+
+        self.layout.label(text="Dimensions:")
+        box = self.layout.box()
+        row = box.row()
+        row.label(text="<X;Y;Z>")
+
+        xdim_txt = f"{location.x:0.3f}".rstrip('0').rstrip('.')
+        ydim_txt = f"{location.y:0.3f}".rstrip('0').rstrip('.')
+        zdim_txt = f"{location.z:0.3f}".rstrip('0').rstrip('.')
+
+        row.label(text=f"<{xdim_txt};{ydim_txt};{zdim_txt}> m")
+        
+        row = self.layout.row()
+        row.label(text="Beacon address")
+        row.label(text=f"<{address_left};{address_right}>")
+        
+        row = self.layout.row()
+        row.label(text="Server")
+        row.label(text=f"{server_addr}:{server_port}")
+        
+        row = self.layout.row()
+        row.label(text="Client")
+        row.label(text=f"{client_addr}:{client_port}")
+
+
+class ModifyDroneOperator(bpy.types.Operator):
+    """Modify drone operator"""
+    bl_idname = "scene.modify_drone_operator"
+    bl_label = "Modify"
+    bl_description = "Modify drone"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return sceneModel.PlanCollection().getActive() is None and \
+               sceneModel.DronesCollection().getActive() is None and \
+               len(sceneModel.DronesCollection()) > 0 and \
+               not utilsAlgorithm.MarvelmindHandler().isRunning()
+    
+    def execute(self, context):
+        drones_list = context.scene.drones_list
+        drone_index = context.scene.drone_list_index
+
+        if not 0 <= drone_index < len(drones_list):
+            return {'FINISHED'}
+
+        item = drones_list[drone_index]
+        mesh_id = item.drone_name
+
+        drone = sceneModel.DronesCollection().get(mesh_id)
+
+        droneObj = bpy.data.objects[mesh_id]
+
+        location = context.scene.drone_props.prop_drone_location
+        rotation = context.scene.drone_props.prop_drone_rotation
+
+        addr_left  = context.scene.drone_props.prop_drone_address_left
+        addr_right = context.scene.drone_props.prop_drone_address_right
+
+        server_addr = context.scene.drone_props.prop_drone_server_address
+        server_port = context.scene.drone_props.prop_drone_server_port
+        client_addr = context.scene.drone_props.prop_drone_client_address
+        client_port = context.scene.drone_props.prop_drone_client_port
+
+        drone.address       = (addr_left, addr_right)
+        drone.serverAddress = server_addr
+        drone.serverPort    = server_port
+        drone.clientAddress = client_addr
+        drone.clientPort    = client_port
+
+        drone.translate(sceneModel.Pose(location.x, location.y, location.z, rotation.x, rotation.y, rotation.z))
+
+        #drone_repr = str(sceneModel.DronesCollection().get(mesh_id))
+        self.report({'INFO'}, f"\"{mesh_id}\" drone was modified\n")
+
+        return {'FINISHED'}
+    
+    def invoke(self, context, event):
+        drones_list = context.scene.drones_list
+        drone_index = context.scene.drone_list_index
+
+        if not 0 <= drone_index < len(drones_list):
+            return {'FINISHED'}
+
+        item = drones_list[drone_index]
+        mesh_id = item.drone_name
+
+        self.report({'INFO'}, f"\"{mesh_id}\" drone was selected")
+
+        drone = sceneModel.DronesCollection().get(mesh_id)
+
+        droneObj = bpy.data.objects[mesh_id]
+
+        context.scene.drone_props.prop_drone_location = droneObj.location
+        context.scene.drone_props.prop_drone_rotation = droneObj.rotation_euler
+
+        context.scene.drone_props.prop_drone_address_left  = drone.address[0]
+        context.scene.drone_props.prop_drone_address_right = drone.address[1]
+
+        context.scene.drone_props.prop_drone_server_address = drone.serverAddress
+        context.scene.drone_props.prop_drone_server_port    = drone.serverPort
+        context.scene.drone_props.prop_drone_client_address = drone.clientAddress
+        context.scene.drone_props.prop_drone_client_port    = drone.clientPort
+
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self, context):
+        props = bpy.context.scene.drone_props
+
+        self.layout.prop(props, "prop_drone_location", text="Location")
+        self.layout.prop(props, "prop_drone_rotation", text="Rotation")
+
+        row = self.layout.row()
+        row.label(text="Beacon address")
+        row.prop(props, "prop_drone_address_left", text="Left")
+        row.prop(props, "prop_drone_address_right", text="Right")
+
+        self.layout.prop(props, "prop_drone_server_address", text="Server address")
+        self.layout.prop(props, "prop_drone_server_port", text="Server port")
+        self.layout.prop(props, "prop_drone_client_address", text="Client address")
+        self.layout.prop(props, "prop_drone_client_port", text="Client port")
 
 class LIST_OT_DroneMoveItem(bpy.types.Operator):
     """Move an item in the list."""
