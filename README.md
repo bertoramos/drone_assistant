@@ -43,8 +43,6 @@
   </p>
 </div>
 
-
-
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
@@ -124,34 +122,44 @@ To get a local copy up and running follow these simple example steps.
             
             $ ./python.exe -m pip install --upgrade pip
             
-            $ ./python pip install https://github.com/bertoramos/marvelmind_pylib/releases/download/VERSION/SO-VERSION-FILE.zip
+            $ ./python pip install https://github.com/bertoramos/marvelmind_pylib/releases/download/VERSION/WHEEL-FILE.whl
 
             $ python.exe -c "import marvelmind_pylib; print(marvelmind_pylib.__doc__)"
 
-            MarvelMindDevice class
-
+            Marvelmind C API port
+            ...
         ```
 
 3. Install [msgpack-python](https://github.com/msgpack/msgpack-python) module.
 
 ```bash
-    $ ./python.exe -m ensurepip
+    $ python.exe -m ensurepip
 
-    $ ./python.exe -m pip install --upgrade pip
+    $ python.exe -m pip install --upgrade pip
     
-    $ ./python.exe -m pip install msgpack
+    $ python.exe -m pip install msgpack
     
     $ python.exe -c "import msgpack; print(msgpack.__name__, msgpack.version);"
 
-    msgpack (1, 0, 3)
+    msgpack (1, 1, 0)
 
 ```
 
-4. Activate Measureit addon. To activate Measureit, go to the Preferences tab: Edit > Preferences. Then, in the add-ons tab, look for Measureit and check that the checklist is selected.
+4. Install pyserial module.
+
+```bash
+    $ python.exe -m pip install pyserial
+    
+    $ python.exe -c "import serial; print(serial.__name__, serial.__version__);"
+
+    serial 3.5
+```
+
+5. Activate Measureit addon. To activate Measureit, go to the Preferences tab: Edit > Preferences. Then, in the add-ons tab, look for Measureit and check that the checklist is selected.
 
 ![Activate addon menu](images/edit_install.png)
 
-5. Download [latest releases](https://github.com/bertoramos/drone_assistant/releases).
+6. Download [latest releases](https://github.com/bertoramos/drone_assistant/releases).
     1. Unzip *drone_assistant_VERSION.zip*. You should find two zip files called *drone_control.zip* and *utilities.zip*.
     2. Go to Addon Tab: Edit > Preferences > Add-ons.
     3. Click install and select *utilities.zip*. Repeat with *drone_control.zip*.

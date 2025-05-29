@@ -6,7 +6,7 @@ from bpy.types import Function
 import gpu
 from gpu_extras.batch import batch_for_shader
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Callable
 from bpy_types import Context
 
@@ -49,13 +49,13 @@ class Point3D:
 @dataclass
 class Curve:
     points : List
-    color  : RGBAColor = RGBAColor(0, 0, 0, 1)
+    color  : RGBAColor = field(default_factory=lambda: RGBAColor(0, 0, 0, 1))
 
 @dataclass
 class DashedCurve:
     points : List
     scale  : float
-    color  : RGBAColor = RGBAColor(0, 0, 0, 1)
+    color  : RGBAColor = field(default_factory=lambda: RGBAColor(0, 0, 0, 1))
 
 @dataclass
 class Arrow:
@@ -63,13 +63,13 @@ class Arrow:
     end: Point3D
     head_len: float
     head_size: float
-    color  : RGBAColor = RGBAColor(0, 0, 0, 1)
+    color  : RGBAColor = field(default_factory=lambda: RGBAColor(0, 0, 0, 1))
 
 @dataclass
 class Star:
     point: Point3D
     size: float
-    color: RGBAColor = RGBAColor(1, 1, 0, 1)
+    color: RGBAColor = field(default_factory=lambda: RGBAColor(1, 1, 0, 1))
 
 #############################################
 ## 2D
@@ -84,7 +84,7 @@ class Texto:
     size: Callable[[Context], int] = 20
     dpi : int = 72
 
-    text_color: RGBAColor = RGBAColor(0,0,0,1)
+    text_color: RGBAColor = field(default_factory=lambda: RGBAColor(0,0,0,1))
 
 @dataclass
 class Circle2D:
@@ -92,7 +92,7 @@ class Circle2D:
     radius: float
     step: int
 
-    color: RGBAColor = RGBAColor(1, 0, 0, 1)
+    color: RGBAColor = field(default_factory=lambda: RGBAColor(1, 0, 0, 1))
 
     xfun: Callable[[Point2D, float, int], float] = lambda center, radius, alpha: center.x + radius*cos(alpha)
     yfun: Callable[[Point2D, float, int], float] = lambda center, radius, alpha: center.y + radius*sin(alpha)
@@ -103,13 +103,13 @@ class Triangle2D:
     p1: Callable[[Context], Point2D]
     p2: Callable[[Context], Point2D]
 
-    color: RGBAColor = RGBAColor(1, 0, 0, 1)
+    color: RGBAColor = field(default_factory=lambda: RGBAColor(1, 0, 0, 1))
 
 #######################################################
 
 def __draw_text_2d(context, txt):
     blf.position(txt.font_id, txt.x(context), txt.y(context), 0)
-    blf.size(txt.font_id, txt.size, txt.dpi)
+    blf.size(txt.font_id, txt.size)
     blf.color(txt.font_id, txt.text_color.red, txt.text_color.green, txt.text_color.blue, txt.text_color.alpha)
     blf.draw(txt.font_id, txt.text(context))
 
@@ -172,7 +172,7 @@ def __draw_arrow_3d(arrow):
             if i > j: __draw_line_3d(color, p_a, p_b)
 
 def __draw_line_3d(color, start, end):
-    shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+    shader = gpu.shader.from_builtin('UNIFORM_COLOR')
     batch = batch_for_shader(shader, 'LINES', {"pos": [start,end]})
     shader.bind()
     shader.uniform_float("color", color)
@@ -182,7 +182,7 @@ def __draw_curve_3d(curve):
     points = [(p.x, p.y, p.z) for p in curve.points]
     color = (curve.color.red, curve.color.green, curve.color.blue, curve.color.alpha)
 
-    shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+    shader = gpu.shader.from_builtin('UNIFORM_COLOR')
     batch = batch_for_shader(shader, 'LINE_STRIP', {"pos": points})
     shader.bind()
     shader.uniform_float("color", color)
@@ -263,7 +263,7 @@ def __draw_circle_2d(context, circle):
     indices_circle = tuple((0, e, e+1) for e in range(1, len(vertices_circle)-1))
     color = (circle.color.red, circle.color.green, circle.color.blue, circle.color.alpha)
 
-    shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+    shader = gpu.shader.from_builtin('UNIFORM_COLOR')
     batch = batch_for_shader(shader, 'TRIS', {"pos": vertices_circle}, indices=indices_circle)
 
     shader.bind()
@@ -277,7 +277,7 @@ def __draw_triangle_2d(context, triangle):
     x2, y2 = triangle.p2(context).x, triangle.p2(context).y
     coords = [(x0, y0), (x1, y1), (x2, y2)]
     indices = [(0, 1, 2)]
-    shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+    shader = gpu.shader.from_builtin('UNIFORM_COLOR')
     batch = batch_for_shader(shader, 'TRIS', {"pos": coords}, indices=indices)
 
     color = (triangle.color.red, triangle.color.green, triangle.color.blue, triangle.color.alpha)
@@ -306,8 +306,9 @@ def draw_callback_px(self, context):
 
 def draw_view_callback_px(self, context):
     
-    bgl.glEnable(bgl.GL_BLEND)
-    bgl.glEnable(bgl.GL_LINE_SMOOTH)
+    gpu.state.blend_set('ALPHA')
+    #bgl.glEnable(bgl.GL_BLEND)
+    #bgl.glEnable(bgl.GL_LINE_SMOOTH)
     # bgl.glEnable(bgl.GL_DEPTH_TEST)
     
     for k in HUDWriterOperator._curves_3d:
@@ -328,11 +329,13 @@ def draw_view_callback_px(self, context):
         star = HUDWriterOperator._star_3d[k]
         __draw_star(star)
     
-    bgl.glLineWidth(1)
-    bgl.glDisable(bgl.GL_BLEND)
-    bgl.glDisable(bgl.GL_LINE_SMOOTH)
+    #bgl.glLineWidth(1)
+    #bgl.glDisable(bgl.GL_BLEND)
+    #bgl.glDisable(bgl.GL_LINE_SMOOTH)
     # bgl.glEnable(bgl.GL_DEPTH_TEST)
-
+    gpu.state.line_width_set(1)
+    gpu.state.blend_set('NONE')
+    
     for k in HUDWriterOperator._dashed_curve_3d:
         curve = HUDWriterOperator._dashed_curve_3d[k]
         __draw_dotted_curve_3d(curve)

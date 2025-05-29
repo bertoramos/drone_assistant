@@ -2,11 +2,14 @@ import bpy
 from bpy.props import BoolProperty
 
 # begin local import: Change to from . import MODULE
+import RobomapKeymap
 # end local import: Change to from . import MODULE
-
 
 def autoregister():
     bpy.utils.register_class(DeleteOverrideOperator)
+    RobomapKeymap.load_keymap()
+    bpy.context.preferences.keymap.active_keyconfig="RobomapKeymap"
+    
 
 def autounregister():
     bpy.utils.unregister_class(DeleteOverrideOperator)
@@ -73,7 +76,7 @@ def delete(self, context, delete_children=False):
 
 class DeleteOverrideOperator(bpy.types.Operator):
     """delete unprotected objects"""
-    bl_idname = "object.delete"
+    bl_idname = "object.custom_delete"
     bl_label = "Delete unprotected"
     bl_options = {'REGISTER', 'INTERNAL'}
     bl_description = "Delete selected objects and optionally children"
