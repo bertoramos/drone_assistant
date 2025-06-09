@@ -49,6 +49,16 @@ class Buffer(metaclass=Singleton):
             self.__buffer.remove(ret_packet)
         return ret_packet
     
+    def receive_end_timed_capture(self):
+        ret_packet = None
+        for packet in self.__buffer:
+            if type(packet) == dp.EndTimedCapturePacket:
+                ret_packet = packet
+                break
+        if ret_packet is not None:
+            self.__buffer.remove(ret_packet)
+        return ret_packet
+    
     def receive_close_server(self):
         ret_packet = None
         for packet in self.__buffer:
@@ -236,3 +246,16 @@ class ConnectionHandler(metaclass=Singleton):
         self.send(pose_packet)
 
         return True
+
+    def send_start_timed_capture(self, captureTime):
+        Buffer().last_snt_pid += 1
+        PID = Buffer().last_snt_pid
+        
+        timed_capture_packet = dp.StartTimedCapturePacket(pid=PID, captureTime=captureTime)
+        
+        self.send(timed_capture_packet)
+        
+        return self.receive_ack_packet(PID)
+    
+    def receive_end_timed_capture(self):
+        return Buffer().receive_end_timed_capture() is not None

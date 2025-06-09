@@ -35,3 +35,4 @@ from .plan_generator import PlanGeneratorModalOperator
 #from .captureOperator import CaptureModalOperator
 
 from .captureOperator import ToggleCaptureOperator
+from .captureOperator import TimedCaptureModalOperator

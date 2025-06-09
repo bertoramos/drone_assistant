@@ -191,12 +191,12 @@ class DroneProps(bpy.types.PropertyGroup):
     prop_drone_rotation: bpy.props.FloatVectorProperty(name="Rotation", description="Initial drone rotation", default=(0.0, 0.0, 0.0), subtype='XYZ', size=3)
     prop_drone_dimension: bpy.props.FloatVectorProperty(name="Dimension", description="Dimension drone ", default=(0.5, 0.5, 0.5), min=0.0, subtype='XYZ', size=3)
     
-    prop_drone_address_left: bpy.props.IntProperty(name="address_left", description="Drone address", min=1, default=12)
-    prop_drone_address_right: bpy.props.IntProperty(name="address_right", description="Drone address", min=1, default=13)
+    prop_drone_address_left: bpy.props.IntProperty(name="address_left", description="Drone address", min=1, default=13)
+    prop_drone_address_right: bpy.props.IntProperty(name="address_right", description="Drone address", min=1, default=12)
 
     prop_drone_server_address: bpy.props.StringProperty(name="Server address", description="Server address", default="192.168.0.16")
     prop_drone_server_port: bpy.props.IntProperty(name="Server port", description="Server port", default=4445, min=1)
-    prop_drone_client_address: bpy.props.StringProperty(name="Client address", description="Client address", default="192.168.0.24")
+    prop_drone_client_address: bpy.props.StringProperty(name="Client address", description="Client address", default="0.0.0.0")
     prop_drone_client_port: bpy.props.IntProperty(name="Client port", description="Client port", default=5558, min=1)
 
 class CreateDroneOperator(bpy.types.Operator):

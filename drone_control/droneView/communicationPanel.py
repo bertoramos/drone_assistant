@@ -8,7 +8,8 @@ from drone_control.droneController import (
                     TogglePlanOperator,
                     DroneMovementHandler,
                     ManualSimulationModalOperator,
-                    ToggleCaptureOperator
+                    ToggleCaptureOperator,
+                    TimedCaptureModalOperator
 )
 
 class CommunicationPanel(bpy.types.Panel):
@@ -39,3 +40,5 @@ class CommunicationPanel(bpy.types.Panel):
         #self.layout.operator(CaptureModalOperator.bl_idname, text="Capture")
         txt_file = ("Start" if not ToggleCaptureOperator.isCapturing else "Stop") + " capture"
         self.layout.operator(ToggleCaptureOperator.bl_idname, text=txt_file)
+        
+        self.layout.operator(TimedCaptureModalOperator.bl_idname, text="Capture n seconds")

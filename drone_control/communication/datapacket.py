@@ -110,3 +110,29 @@ class PosePacket(Packet):
     y = property(__get_y)
     z = property(__get_z)
     yaw = property(__get_yaw)
+
+class StartTimedCapturePacket(Packet):
+
+    PTYPE = 7
+    
+    def __init__(self, pid, ptype=PTYPE, captureTime=1.0) -> None:
+        super().__init__(pid, ptype)
+        self.__captureTime = captureTime
+        
+    def __get_captureTime(self):
+        return self.__captureTime
+    
+    captureTime = property(fget=__get_captureTime)
+
+    def __iter__(self):
+        return iter([self.pid, self.ptype, self.captureTime])
+
+class EndTimedCapturePacket(Packet):
+    
+    PTYPE = 8
+    
+    def __init__(self, pid, ptype=PTYPE) -> None:
+        super().__init__(pid, ptype)
+
+    def __iter__(self):
+        return iter([self.pid, self.ptype])

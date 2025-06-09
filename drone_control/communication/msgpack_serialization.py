@@ -104,6 +104,35 @@ class PosePacketMsgPackSerialization(st.Serialization):
 
         return datapacket.PosePacket(list_packet[0])
 
+class StartTimedCapturePacketMsgPackSerialization(st.Serialization):
+
+    @staticmethod
+    def pack(packet):
+        assert type(packet) == datapacket.StartTimedCapturePacket, "Error: packet is not a StartTimedCapturePacket"
+        l = list(iter(packet))
+        return list(iter(packet))
+    
+    @staticmethod
+    def unpack(list_packet: list):
+        assert len(list_packet) == 2, "Error: No valid start timed capture packet"
+        assert list_packet[1] == datapacket.EndCapturePacket.PTYPE, "Error: list_packet is not a start timed capture packet"
+
+        return datapacket.StartTimedCapturePacket(list_packet[0])
+
+class EndTimedCapturePacketMsgPackSerialization(st.Serialization):
+
+    @staticmethod
+    def pack(packet):
+        assert type(packet) == datapacket.EndTimedCapturePacket, "Error: packet is not a StartTimedCapturePacket"
+        l = list(iter(packet))
+        return list(iter(packet))
+    
+    @staticmethod
+    def unpack(list_packet: list):
+        assert len(list_packet) == 2, "Error: No valid end timed capture packet"
+        assert list_packet[1] == datapacket.EndTimedCapturePacket.PTYPE, "Error: list_packet is not a end timed capture packet"
+
+        return datapacket.EndTimedCapturePacket(list_packet[0])
 
 # { ptype : SerializationClass, ... }
 # choose_serialization.get(ptype) -> return: ptype pack/unpack method
@@ -113,7 +142,9 @@ choose_serialization = {
                         datapacket.StartCapturePacket.PTYPE: StartCapturePacketMsgPackSerialization,
                         datapacket.EndCapturePacket.PTYPE: EndCapturePacketMsgPackSerialization,
                         datapacket.CloseServerPacket.PTYPE: CloseServerPacketMsgPackSerialization,
-                        datapacket.PosePacket.PTYPE: PosePacketMsgPackSerialization
+                        datapacket.PosePacket.PTYPE: PosePacketMsgPackSerialization,
+                        datapacket.StartTimedCapturePacket.PTYPE: StartTimedCapturePacketMsgPackSerialization,
+                        datapacket.EndTimedCapturePacket.PTYPE: EndTimedCapturePacketMsgPackSerialization
                         }
 
 class MsgPackSerializator(st.Serializator):
