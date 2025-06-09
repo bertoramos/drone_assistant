@@ -435,8 +435,8 @@ class HUDWriterOperator(bpy.types.Operator):
             self._handler_2d = bpy.types.SpaceView3D.draw_handler_add(draw_callback_px, args, 'WINDOW', 'POST_PIXEL')
             self._handler_3d = bpy.types.SpaceView3D.draw_handler_add(draw_view_callback_px, args, 'WINDOW', 'POST_VIEW')
 
-            self._timer = context.window_manager.event_timer_add(0.1, window=context.window)
-
+            self._timer = context.window_manager.event_timer_add(1, window=context.window)
+            
             default_hud_create(context)
             
             context.window_manager.modal_handler_add(self)

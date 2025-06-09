@@ -80,7 +80,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         ConnectionHandler().start()
         
         if not ConnectionHandler().send_change_mode(datapacket.ModePacket.CONNECT):
-            self.report({"INFO"}, "Server not available")
+            self.report({"ERROR"}, "Server not available")
             ConnectionHandler().stop()
             return False
         else:
