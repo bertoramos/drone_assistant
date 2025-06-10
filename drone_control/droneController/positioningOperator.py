@@ -70,7 +70,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         DroneMovementHandler().stop_positioning()
         DroneMovementHandler().finish()
     
-    def _begin_thread(self, dev, clientAddr, serverAddr):
+    def _begin_thread(self, dev, clientAddr, serverAddr, update_rate_hz=8):
         handler = MarvelmindHandler()
         
         if not ConnectionHandler().initialize(clientAddr, serverAddr):
@@ -86,7 +86,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         else:
             print("Mode changed to 1")
         
-        handler.start(device=dev, verbose=True)
+        handler.start(device=dev, verbose=True, update_rate_hz=update_rate_hz)
 
         PositioningSystemModalOperator._poseSender = PoseSenderThread()
         PositioningSystemModalOperator._poseSender.start()
@@ -185,6 +185,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         preferences = context.preferences
         addon_prefs = preferences.addons[__name__.split(".")[0]].preferences
         dev = context.scene.prop_marvelmind_port
+        update_rate_hz = context.scene.prop_marvelmind_update_rate_hz
         #dev = addon_prefs.prop_marvelmind_port
 
         drone = sceneModel.DronesCollection().getActive()
@@ -194,7 +195,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         udp_clientAddr = (drone.clientAddress, drone.clientPort)
         udp_serverAddr = (drone.serverAddress, drone.serverPort)
         
-        if not self._begin_thread(dev, udp_clientAddr, udp_serverAddr):
+        if not self._begin_thread(dev, udp_clientAddr, udp_serverAddr, update_rate_hz=update_rate_hz):
             PositioningSystemModalOperator.isRunning = False
             return {'FINISHED'}
         self._observe_drone()

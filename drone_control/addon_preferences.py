@@ -2,7 +2,7 @@
 from typing import DefaultDict
 import bpy
 from bpy.types import AddonPreferences
-from bpy.props import StringProperty
+from bpy.props import StringProperty, IntProperty
 
 import sys
 
@@ -17,9 +17,16 @@ def register():
         #set=set_port,
         default=DEFAULT_PORT
     )
+    
+    bpy.types.Scene.prop_marvelmind_update_rate_hz = IntProperty(
+        name="Marvelmind Update Rate (HZ)",
+        min=1,
+        default=100
+    )
 
 def unregister():
     del bpy.types.Scene.prop_marvelmind_port
+    del bpy.types.Scene.prop_marvelmind_update_rate_hz
 
 def set_port(self, value):
     import re
@@ -43,4 +50,5 @@ class DroneControlPreferences(AddonPreferences):
     def draw(self, context):
         layout = self.layout
         layout.prop(context.scene, "prop_marvelmind_port")
+        layout.prop(context.scene, "prop_marvelmind_update_rate_hz")
 

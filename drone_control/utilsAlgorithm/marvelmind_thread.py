@@ -33,8 +33,10 @@ class MarvelmindThread(StoppableThread):
     def __init__(self, *args, **kwargs):
         self.__tty_dev = kwargs['device']
         self.__verbose = kwargs['verbose']
+        self.__update_rate_hz = kwargs['update_rate_hz']
         del kwargs['device']
         del kwargs['verbose']
+        del kwargs['update_rate_hz']
 
         super(MarvelmindThread, self).__init__(*args, **kwargs)
 
@@ -129,16 +131,18 @@ class MarvelmindThread(StoppableThread):
                 logger.info("Marvelmind thread stopped")
                 return
             self.execute()
+            
+            time.sleep(1/self.__update_rate_hz)
 
 class MarvelmindHandler(metaclass=Singleton):
 
     def __init__(self):
         self.__thread = None
     
-    def start(self, device, verbose):
+    def start(self, device, verbose, update_rate_hz):
         if self.__thread is None:
             self.dev = device
-            self.__thread = MarvelmindThread(device=device, verbose=verbose)
+            self.__thread = MarvelmindThread(device=device, verbose=verbose, update_rate_hz=update_rate_hz)
             self.__thread.setDaemon(True)
             self.__thread.start()
     
