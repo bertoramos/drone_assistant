@@ -319,7 +319,11 @@ class PlanControllerObserver(Observer):
 
         # Tracking
         if len(self.__tracking) >= 2:
-            curve = DashedCurve([Point3D(pose.location.x, pose.location.y, pose.location.z) for pose in self.__tracking], self.__tracking_scale)
+            n_allowed_points = bpy.context.scene.marvelmind_num_points
+            
+            drawable_tracking = self.__tracking[-n_allowed_points::]
+            
+            curve = DashedCurve([Point3D(pose.location.x, pose.location.y, pose.location.z) for pose in drawable_tracking], self.__tracking_scale)
             curve.color = self.__tracking_color
             HUDWriterOperator._dashed_curve_3d[PLAN_EXECUTION_TRACKING] = curve
             #print(len(self.__tracking.points))
