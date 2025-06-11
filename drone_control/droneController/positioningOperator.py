@@ -80,7 +80,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         ConnectionHandler().start()
         
         if not ConnectionHandler().send_change_mode(datapacket.ModePacket.CONNECT):
-            self.report({"ERROR"}, "Server not available")
+            
             ConnectionHandler().stop()
             return False
         else:
@@ -197,6 +197,7 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         
         if not self._begin_thread(dev, udp_clientAddr, udp_serverAddr, update_rate_hz=update_rate_hz):
             PositioningSystemModalOperator.isRunning = False
+            self.report({"ERROR"}, "Server not available")
             return {'FINISHED'}
         self._observe_drone()
         
@@ -205,14 +206,14 @@ class PositioningSystemModalOperator(bpy.types.Operator):
         self._timer = wm.event_timer_add(0.1, window=context.window)
         
         PositioningSystemModalOperator.error_message = ""
-
+        
         return {'RUNNING_MODAL'}
 
 
 class TogglePositioningSystemOperator(bpy.types.Operator):
     bl_idname = "object.togglepositioningsystem"
     bl_label = "TogglePositioningSystem"
-
+    
     def _check_serial(self, dev):
         import serial
         
