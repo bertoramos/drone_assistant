@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Alberto Ramos Sánchez",
     "description" : "",
     "blender" : (4, 0, 0),
-    "version" : (1, 0, 0),
+    "version" : (2, 0, 0),
     "location" : "View3D > Sidebar Panel > Drone Control Panel",
     "warning" : "",
     "category" : "Scene",
